@@ -1,0 +1,743 @@
+Implementation Plan for a Tourist Safety System
+ (24-Hour Hackathon)
+ Architecture Overview & Team Roles
+ To build this end-to-end safety system in 24 hours, we recommend dividing the work among the four team
+ members and focusing on an integrated prototype rather than perfection. The system has multiple
+ components – a tourist mobile app, two authority web portals, a blockchain backend for digital IDs, and an
+ optional IoT layer. We will use a modular architecture where the mobile app, web portals, and blockchain
+ communicate via secure APIs and real-time data streams . Each team member can take ownership of
+ one major module: 
+1
+ • 
+• 
+• 
+• 
+Mobile App Developer: Builds the tourist-facing mobile app (with features like digital ID, geo
+fencing alerts, panic button, etc.). 
+Blockchain/Backend Developer: Implements the blockchain smart contract for Digital Tourist ID
+ generation and sets up server logic or cloud functions for data integration. 
+Tourism Dept Dashboard Developer: Creates the web portal for Tourism Department officials
+ (focusing on ID management, maps, and analytics). 
+Police/Emergency Dashboard Developer: Builds the web portal for police/emergency services
+ (focusing on SOS alerts, anomaly detection, and incident management).
+ All components will share data through common interfaces. For speed, you can use a lightweight backend
+ (e.g. Node.js/Express or Firebase) to relay data between the app, blockchain, and portals. This ensures real
+time geo-location updates and alerts across the system while the blockchain secures critical ID and
+ log data.
+ 1
+ Mobile App (Tourist-Facing)
+ Tech Stack: Use a cross-platform framework like React Native or Flutter to develop quickly for both
+ Android and iOS. This app will be the tourist’s primary tool for safety. Key features to implement: 
+• 
+2
+ 1
+ Digital Tourist ID & KYC: On first use, the tourist registers with their identification (passport or
+ Aadhaar details). Since fully verifying a passport in 24h is challenging, use a simple form or scan (you
+ could parse the passport MRZ if libraries are available). For digital ID generation, integrate a
+ blockchain-based identity. One approach is using the Self protocol SDK, which allows verifying
+ passport info and creating a zero-knowledge proof of identity on-chain . Self is a privacy-first
+ identity system that lets users prove who they are (age, citizenship, etc.) on-chain without exposing
+ personal data . If integrating Self is too complex for the hackathon timeframe, a simpler fallback
+ is to deploy a custom smart contract and register the tourist’s ID there (e.g. store a hash of their
+ passport number or a new unique ID). This gives us a tamper-proof “Digital Tourist ID” on the
+ blockchain . The mobile app, upon successful KYC, will receive a unique ID (perhaps the
+ transaction hash or a generated UUID) that represents the tourist for the rest of the trip.
+ 2
+ 1
+• 
+Trip Itinerary & Profile: Allow the tourist to input basic trip details (cities or landmarks they plan to
+ visit, travel dates, and emergency contact numbers). This itinerary can be stored off-chain (in app
+ storage or a database) and linked to their blockchain ID. Keep it simple – maybe a list of locations or
+ a daily route plan. This will later help with anomaly detection (e.g. if they stray far from planned
+ areas).
+ • 
+• 
+• 
+• 
+Live Location Tracking: Use the phone’s GPS to obtain the tourist’s coordinates periodically. The
+ app can send updates every few minutes to a backend (or use a real-time database) so that
+ authorities can monitor location if needed. Given time constraints, you can use high-level APIs (e.g.
+ Google Maps or Mapbox SDK) for map display and geolocation. The data flow might be: the app
+ sends its location to a cloud database (like Firebase Firestore or a simple REST API on the backend),
+ and the web dashboards read from there to display positions.
+ Auto Safety Score: Implement a basic safety scoring mechanism for the tourist’s current location.
+ This could be a simple number or color indicator showing how safe the area is. Since a robust
+ algorithm is complex, use heuristics or external data if available. For example, you might integrate a
+ service like GeoSure or an API that provides neighborhood safety ratings . If that’s not feasible,
+ predefine certain areas with higher risk levels (e.g. flagged by the tourism department) and score
+ those lower. The app can combine factors like time of day (late-night = lower safety), location crime
+ data (if available), and proximity to “unsafe zones” to produce a score. E.g. if the user is in a known
+ crowded tourist spot with active police presence, score high (safe); if they wander into a secluded
+ area tagged as high-crime, score low. The TripIt app’s Neighborhood Safety Scores is a model here– it uses hundreds of variables to rate safety on a 1–100 scale . In our hack, keep it simple but
+ show the concept (perhaps a 5-star or a color from green to red). This score would be updated in
+ real-time as the user moves.
+ 3
+ 3
+ Geo-fencing Alerts: Hard-code or configure a set of “high-risk or restricted zones” on a map (these
+ could come from the Tourism Dept’s data). Use geo-fencing: the app checks if the user’s GPS enters
+ one of those zones and immediately triggers an alert notification. For implementation, use the
+ map SDK’s geo-fence capabilities or calculate distance to zone center. For example, define a radius
+ around a restricted area; if 
+distance(user_location, zone_center) < radius , then show a
+ warning (“You are entering a high-risk area!”) and send an alert to the Tourism Dept portal. Real-time
+ geo-fencing for zone monitoring was a key feature in a similar project, and it can be achieved with
+ continuous GPS checks and boundary definitions . Start with a small list of zones for the demo.
+ Upon entering, the app can vibrate/beep and also transmit an “zone entry” event to the backend (so
+ officials know the tourist is in a risky area).
+ 4
+ Panic/SOS Button: This is a critical feature – a large, easily accessible SOS button in the app UI.
+ When pressed, it should do three things simultaneously: 1) send an SOS alert with the tourist’s live
+ location and ID to the police/emergency web dashboard, 2) notify the Tourism Department
+ dashboard, and 3) alert the tourist’s emergency contacts/family. In practice, you can implement this
+ by making a single API call to your backend which then fans out the notifications. For the hack demo,
+ for instance, the app can call an endpoint 
+/panic with the tourist’s ID and GPS coordinates. The
+ backend can write this to a database (mark the tourist as “SOS active” with location) which the police
+ portal is actively listening to (either via WebSocket or querying the DB every few seconds). At the
+ same time, you can simulate sending an SMS or email to the family contact. (If Twilio or an SMS API
+ is easy to integrate, great; otherwise simply log it or show it on a “family view”.) This mirrors how real
+ 2
+5
+ family locator apps work – e.g. Life360 has SOS Alerts that silently send your precise location to
+ friends, family, and emergency responders . In our system, the SOS alert appearing on the
+ police portal will include the tourist’s identity (from blockchain ID data or profile) and a map location
+ so responders can act immediately.
+ • 
+• 
+• 
+Multilingual Support: India has diverse languages, so include at least basic multilingual capability.
+ Given time constraints, you can implement this by using a localization library or simple dictionaries
+ for 2–3 languages (e.g. English, Hindi, and a regional language). Prepare the essential UI text
+ (buttons, alerts, instructions) in these languages. For example, in React Native you might use i18next
+ or react-intl; in Flutter, use ARB files or the 
+flutter_localizations package. The user should be
+ able to select their preferred language at start, or detect device locale. Even if you cannot cover all
+ 10+ languages in the hackathon, demonstrating 2 languages will prove the concept. Also consider
+ voice support for accessibility – you could use text-to-speech for alerts or a voice prompt for SOS (if
+ time permits).
+ Family Tracking (Opt-in): Provide a feature for tourists to share their live location with family or
+ friends for peace of mind. If the tourist opts in, the app can continuously or periodically send
+ location data that family members can view. Implementation options: 1) Create a lightweight “family
+ web view” (or a simplified app interface) where a family member can enter the tourist’s unique ID
+ and then see their location on a map in real-time. 2) Or, have the app generate a private tracking link
+ that can be sent to family (perhaps showing a map in a browser). For simplicity, using a web view
+ might be easiest: e.g. an HTML page that reads the tourist’s location from the database and displays
+ it. The family tracking mode should also push inactivity or SOS alerts to the family – for example, if
+ the tourist hasn’t moved in X hours or if they hit the panic button, the family gets a notification. (In
+ demo, this could be shown by a pop-up or color change on the family’s view.) This aligns with
+ features in safety apps – for instance, Safetipin’s methodology suggests users can ask a friend to
+ track them and get notified if there’s a problem . We can implement a basic version of that: if SOS
+ is pressed or an “unsafe” event occurs, the app/back-end pings the family contact (via SMS/email or
+ on the family portal).
+ 6
+ Tourist Feedback: After the trip (or after any incident), allow the tourist to provide feedback or
+ safety ratings. This could be a simple form in the app where they rate their overall feeling of safety,
+ or report any issues encountered. Store this feedback in the system for analysis. For the hack,
+ implement a basic feedback form (e.g. 1-5 star rating and a comment). This data will be used in the
+ Tourism Dept portal to show analytics (like average safety rating, or common issues reported). It
+ also serves as a reporting mechanism if something bad happened (the tourist can log an incident
+ report, which could be forwarded to authorities). If time is short, prioritize the core safety features
+ f
+ irst, and you can prepare some dummy feedback data to showcase the analytics if needed.
+ Development Tips (Mobile App): Start with setting up the project and core screens (Registration/KYC
+ screen, Map/Tracking screen, SOS button overlay, Settings for language). Integrate the map and location
+ services early, as that can be the trickiest with permissions. Use dummy data for blockchain ID and
+ geofence initially to get the UI flow right. Then implement the blockchain call for ID (with error handling)
+ and the real geofence logic. For testing, simulate moving by either actually changing device location
+ (Android dev mode allows mock locations) or by programmatically feeding coordinates. Ensure the SOS
+ button triggers an entry visible on the police portal (coordinate with that team member to test the full
+ 3
+path). Keep the UI simple and clear given time – large buttons, intuitive icons (e.g., a shield or whistle icon
+ for SOS, etc.). 
+Web Portal – Tourism Department (Admin Dashboard)
+ Tech Stack: A web application, preferably using a framework like React, Angular, or Vue for quick
+ development. React with a UI component library (Material UI or Bootstrap) can speed up making tables,
+ forms, and charts. This portal is used by tourism officials (at airports, borders, or central office) to manage
+ tourist registrations and monitor macro-level safety.
+ Key features to implement on this portal: 
+• 
+• 
+• 
+Digital ID Issuance & KYC Management: This interface should show a list of all tourists who have
+ registered (or been issued a Digital ID). When a tourist registers via the app, the data will appear
+ here (pull from the blockchain or your database). For the hack, you can have the portal fetch from a
+ central database that is updated when a new ID is created. Display each tourist’s info: name, photo
+ (if you capture one), nationality, trip duration, and their Digital ID (which might be a blockchain
+ transaction hash or a QR code representing the blockchain ID). The portal user should be able to
+ click “Verify ID” which checks the blockchain record to confirm authenticity. (For example, if using
+ Ethereum, you could integrate a web3 call to fetch the stored data by ID and compare it.) This proves
+ the ID is tamper-proof. Since we may not have actual passport scanners in hackathon, assume KYC is
+ done by app/user upload; the official’s role here is mostly viewing and managing records. Optionally,
+ include a “Register New Tourist” form so officials can manually input a tourist’s details – this could
+ simulate an airport kiosk where an officer registers someone who didn’t use the app. Upon
+ submission, it would also invoke the blockchain ID creation (or call the backend to do so). 
+GIS Risk Zone Heatmaps: Incorporate a map view highlighting unsafe or restricted areas and
+ showing tourists’ locations collectively. Use a mapping API (Google Maps JS API, Mapbox GL JS, or
+ Leaflet with OpenStreetMap). Plot all active tourists as markers on the map (retrieve their latest
+ locations from the database). Next, overlay heatmap or colored zones to indicate risk levels. For
+ simplicity, you can create polygon overlays for known high-risk zones (colored red or orange). If you
+ have time, implement a toggle for heatmap mode: for example, heatmap intensity based on number
+ of tourists in an area or recent incidents. The goal is to let the Tourism Dept see “hotspots” at a
+ glance – both where tourists are congregating and where trouble areas might be. This could be done
+ by taking the tourist markers and using a heatmap library (Google Maps API has a HeatmapLayer) or
+ just by clustering markers. You might color markers themselves by the tourist’s safety score (if the
+ app sends that), e.g., a green dot for safe, red for in danger. A reference concept: the portal should
+ visualize unsafe or restricted clusters on a GIS map , much like geographic dashboards in
+ smart city applications. 
+4
+ Tourist Cluster Monitoring: Provide an overview of tourist distributions. This can be a simple
+ section on the dashboard that shows the number of tourists in each major location or zone. For
+ example: “City A: 120 tourists, City B: 45 tourists, National Park Zone: 10 tourists” etc. You can derive
+ this from grouping the tourists’ coordinates (perhaps group by region or use reverse geocoding to
+ city names if possible via an API). A simpler hack: have a predefined list of regions of interest and
+ count how many tourist markers fall in them. Display these stats as a list or bar chart. This helps
+ identify if tourists are congregating dangerously or if some remote area has a lone tourist (which
+ 4
+might be riskier). Real-time cluster monitoring can be achieved by continuous queries on location
+ data – but in hackathon, updating this view every minute or on page refresh is fine.
+ • 
+• 
+• 
+• 
+• 
+• 
+Alerts & Geo-fence Notifications: The Tourism portal should also display any geo-fence alerts
+ triggered by tourists. For instance, if a tourist app sent “entered restricted zone X” or “high-risk area
+ alert,” list those events. You could have a sidebar or notifications panel that shows “Tourist #ID123
+ entered restricted zone at 15:30” etc. This allows officials to possibly reach out or keep an eye on that
+ situation. Implement by listening to a database collection of alerts (the mobile app would write an
+ entry when geo-fence triggers). For demonstration, generate a couple of such alerts (either from
+ actual app testing or manually). The portal user could have the ability to acknowledge or clear these
+ alerts as well.
+ Feedback Analytics: After collecting tourist feedback (from the app), the Tourism portal can
+ aggregate this into insights. Keep it simple with a few key metrics:
+ Average safety rating (e.g., “4.2 out of 5” overall).
+ Number of incidents reported.
+ Perhaps categorize feedback by location or type (if your feedback form asks what issue, e.g., theft,
+ harassment, etc.). You could show a pie chart of incident types or a bar graph of ratings per city. For
+ hackathon, you might not get real data, so you can create some sample feedback entries and then
+ use a chart library (like Chart.js or Google Charts) to visualize. The goal is to show that the system
+ “learns” from tourist feedback to improve policies. For example, if tourists consistently rate a certain
+ area as unsafe, the Tourism Dept can see that and consider action. Analyze tourist feedback and
+ incidents to identify patterns – even a simple table of comments with a filter by location is
+ useful. 
+7
+ 8
+ Miscellaneous/Admin Functions: Include some basic admin controls such as searching for a tourist
+ by name or ID, filtering the view by active vs completed trips, etc. If the blockchain stores an “ID
+ validity” (trip end date), the portal could automatically flag tourists whose trip period expired (their
+ digital ID should be inactive after their trip). You might visually mark expired ones or allow an admin
+ to deactivate an ID (though in blockchain if it’s time-bound, it could be automatic based on
+ timestamp). These are small touches if time allows.
+ Development Tips (Tourism Portal): Use ready-made components for speed. For the map, get an API key
+ early and display a simple map first, then add markers. You can use dummy data for markers initially, then
+ hook up to live data from the mobile app (maybe fetch from Firestore or your server’s endpoint like /
+ locations returning all tourists’ last seen locations). Ensure CORS is handled if your backend is separate.
+ For charts, if using a library like Chart.js, prepare the data format it needs and test with static data. Aim for a
+ clean UI: perhaps a two-panel layout – left side list/stats, right side map. Use short polling or WebSocket
+ to update info (e.g., every few seconds refresh the list of tourists and alerts). This portal likely won’t perform
+ heavy writes, mostly reads and visualizations, so focus on making data visible and updated. Close
+ collaboration with the mobile app developer is important to structure the data exchange (e.g., location
+ update format, alert format). 
+5
+Web Portal – Police & Emergency Dashboard
+ Tech Stack: Similar to the Tourism portal (could even be part of the same web app with role-based login).
+ Technology can mirror the Tourism portal (React or similar) to reuse components like the map. The Police/
+ Emergency dashboard is for real-time incident response and uses of AI/anomaly detection for proactive
+ alerts. Key features:
+ • 
+• 
+• 
+• 
+• 
+Real-time SOS Alert Board: This is the heart of the police dashboard. It should prominently display
+ any active SOS calls from tourists. Implement a list or card for each SOS incident showing details:
+ Tourist ID/Name, current location (with a map snippet or coordinates), time of alert, and trip info
+ (maybe where they were supposed to be per itinerary). This list should update the moment an SOS is
+ triggered. In practice, using WebSockets or real-time DB triggers will be ideal to get low-latency
+ updates. For hack simplicity, you might have the frontend poll an 
+/active-sos endpoint every
+ few seconds. When an SOS comes in, visually highlight it (red border or flashing icon). The officer can
+ click it to see more details or mark it as Acknowledged/Resolved. On clicking, you could show a
+ modal or detail view: a larger map centered on the tourist’s location, personal info (from their Digital
+ ID profile), and buttons like “Dispatch Police” or “Call Tourist”. You can simulate those actions – e.g.
+ clicking “Dispatch Police” could just add a note “Police dispatched at 15:32” on the incident. The main
+ point is to show immediate awareness and response. Design tip: Use a loud alert icon ( ) or sound for
+ new SOS (if feasible in browser). Also, show the number of active SOS alerts as a badge. This feature
+ aligns with standard emergency systems – ensuring immediate alerts with tourist ID, location,
+ and details for responders .
+ 9
+ Map View & Tracking: The police portal should also have a map (like the Tourism one) but focused
+ on incidents. For each SOS or flagged anomaly, put a marker or an icon on the map. For example, a
+ red blinking dot for an SOS location, and maybe yellow icons for warnings (see next section). This
+ gives the control room a spatial view of emergencies. You could allow toggling between viewing all
+ tourists vs only incidents. Possibly integrate both: show all tourists as small dots, and highlight the
+ ones with issues. Since too many points might clutter, a filter is useful (e.g., a toggle to “Show all
+ tourists”). The map can use the same data source but might update more frequently when tracking a
+ specific SOS (perhaps every few seconds to follow the moving tourist if they are on the move).
+ Securely, this portal should also allow the officer to click on any tourist marker to get that tourist’s
+ profile if needed (imagine an officer proactively checking someone’s status).
+ AI Anomaly Detection: Implement a basic anomaly/wellness monitor for tourists. Since true AI
+ modeling is tough in a day, use rule-based triggers that approximate AI insights:
+ Deviations from itinerary: If a tourist significantly deviates from their planned itinerary or known
+ safe routes, flag it. For example, if a tourist said they would stay in City A but their GPS is now 100 km
+ away unexpectedly, that’s unusual. Or if they were expected to travel from Point X to Y today but they
+ are off that path by a large margin. Technically, this means comparing current location to the nearest
+ itinerary location; if distance > some threshold (say 50km) at a time it shouldn’t be, trigger an alert
+ “Tourist ID123 is off-route”. 
+Inactivity or signal loss: If the system hasn’t received any location update from a tourist’s phone in
+ a long time (e.g., > 1 hour) during an active trip, and they haven’t indicated they are safe, flag it as a
+ possible issue (phone could be off or they could be in trouble). Mark it like “Tourist ID456 no activity
+ for 60 min”.
+ 6
+• 
+Distress pattern: If you have any sensor data (like sudden stop, or a rapid movement that suggests
+ a fall), you could use that. But likely we skip due to no actual IoT yet. Instead, you might simulate an
+ “AI” alert: e.g., randomly decide that if a tourist’s speed goes to zero in a risky area for too long, label
+ it as anomaly (they might be stuck or unconscious).
+ These anomaly rules can run in the backend periodically. For hackathon ease, implement a simple cron
+ (setInterval in Node or just triggered by the frontend on refresh) that checks each tourist record. If an
+ anomaly condition is met, add it to an “Alerts” list for police. On the dashboard, have a section “⚠ Warnings”
+ listing such anomaly detections. For example: “[Warning] Tourist #321 deviated from itinerary by 10km at
+ 11:00 AM” or “[Warning] No movement detected for Tourist #654 since 2 hours”. This shows the AI-powered
+ monitoring concept. You can label it AI to impress judges, even if rule-based behind the scenes. If someone
+ on the team knows machine learning and has time, an extra touch could be training a simple model on
+ motion patterns (but likely not needed – stick to if-else logic disguised as AI). 
+• 
+• 
+• 
+Automated e-FIR Generation: “FIR” (First Information Report) is the official police report for an
+ incident. We want the system to auto-generate a draft of this when an SOS or missing-person
+ scenario occurs, saving precious time. Implement a feature where for each SOS or major alert, the
+ officer can click “Generate Report”. This would compile key details: Tourist’s ID and personal info
+ (from blockchain/registration), time and location of incident, and any available data (last known
+ movements, etc.). You can output this as a PDF or even just a nicely formatted HTML that could be
+ printed. For the hack, using a simple library or even just window.print may suffice. Fill in a template
+ text: “This is an auto-generated FIR for Tourist [Name, ID] on [Date/time]. The tourist triggered an
+ SOS/become unresponsive at location [coords/address]. Itinerary: [XYZ]. Emergency contact [contact
+ info] has been notified.” The idea is to show that much of the form is pre-filled, and the police just
+ needs to take minimal action to file it. This concept of auto-filling incident reports with digital ID
+ data speeds up response . In many places, such integration is being explored – for example,
+ police systems could pull citizen data from IDs to fill reports. In our case, since the data is on
+ blockchain and the app, we leverage it.
+ 9
+ Unified Emergency Dispatch: To truly unify police, ambulance, and other services, the portal can
+ act as a central console. Practically, this means when an SOS comes in, the officer can coordinate all
+ needed responders from one place. You might implement simple buttons on an incident detail:
+ “Notify Ambulance” or “Notify Disaster Mgmt” depending on the nature. Clicking those could simply
+ mark that those services have been alerted (or send a notification to a hypothetical dispatch system).
+ Since we can’t integrate actual emergency networks, just demonstrate the idea. For instance, clicking
+ “Notify Medical” could pop up “🚑 Ambulance dispatched via unified system”. The goal is to show one
+ 10
+ platform that connects to all help agencies. This is analogous to real systems like 112 India’s ERSS
+ which integrates police, fire, medical under one number . You might mention in the demo that
+ your dashboard could directly place calls or messages to these agencies. If you want a visual, you
+ could have icons for Police, Ambulance, Fire etc., and highlight which are engaged for a given SOS.
+ But keep it simple to implement: perhaps just a dropdown to tag the incident as needing specific
+ services, and a log message like “Ambulance notified at 15:35”.
+ Secure ID Access: When police respond to an incident, they need quick access to the tourist’s
+ verified identity and information. The dashboard should allow them to retrieve the secure digital ID
+ record from the blockchain. Implement a feature where clicking on a tourist (either from SOS list or
+ by searching ID) will fetch their ID data from the blockchain smart contract. For example, if your
+ 7
+contract 
+1
+ TouristID stores the name, nationality, and hashed passport, call a web3 function to get
+ that. You can show it on the UI as “Verified via Blockchain ” alongside the data. Because the ID is on
+ a tamper-proof blockchain ledger , the police can trust that it hasn’t been altered. If using the
+ Self protocol, this could be a bit complex to verify on the fly (since it uses zk-proofs); in that case,
+ perhaps just show that the tourist has a “Self ID” and was verified with a certain passport number,
+ etc. The key is that police can securely confirm identity and itinerary from blockchain records
+ (read-only access) without needing to shuffle papers. This also implies access control – only
+ authorized users (police, tourism officials) can view personal details. In a full system, we’d enforce
+ that via permissions on the data (like encryption or blockchain permissioning). In the hack demo,
+ you might not implement full security, but you can simulate it by requiring a login for the police
+ portal and perhaps showing that certain fields (like passport #) are only visible there, not on public
+ interfaces.
+ • 
+event 
+Data Logs & Evidence: If possible, show that all critical events (SOS trigger, alerts, dispatch actions)
+ are being logged immutably (ideally on the blockchain). For example, your smart contract could have
+ an 
+SOSIssued(touristID, 
+timestamp, 
+location) 
+and
+ ResponseLogged(touristID, responder, action, timestamp) . Even if you don’t wire every
+ event due to time, you can simulate one log entry on chain to demonstrate the principle. Then in the
+ police portal, a section “Incident Logs” can list events (some fetched from blockchain if implemented,
+ or just from your DB) for audit purposes. This ties into the blockchain layer’s immutable records of
+ alerts and actions – useful as legal proof that an alert was raised at a certain time .
+ 11
+ 1
+ Development Tips (Police Portal): Focus on the SOS workflow first. Ensure that when the mobile app hits
+ the panic button, an entry shows up here reliably. Test this end-to-end early. Use a simple JSON structure for
+ SOS (e.g., 
+{ id: ..., name: ..., lat, lng, time } ) and have the portal listen. If using Firebase,
+ for instance, the portal can listen to a “sos” collection in Firestore in real-time. That would instantly show the
+ new SOS without you writing a lot of socket code. If not, set up a Socket.io on your Node backend to emit an
+ event to the portal on SOS. Next, build the anomaly detection function – perhaps in the backend (Node
+ cron) to flag issues and store them in a collection the portal reads. Keep the UI clean: maybe use a tabbed
+ interface or columns for “Active SOS” and “Warnings”. Use red/yellow color coding to differentiate urgent vs
+ warning. For the map, reuse what you did for the Tourism portal, but you might highlight a particular
+ tourist when an SOS is selected (zoom in on their location). Time is short, so implement critical parts
+ f
+ irst: SOS receiving, listing, acknowledging, and the report generation template. Those will likely be the core
+ demo scenario (e.g. you demo someone pressing SOS on the app and how quickly the police dashboard
+ picks it up and shows the data, then you click dispatch and generate a report). Other features like unified
+ dispatch buttons and blockchain data retrieval can be stubbed or shown conceptually if you can’t fully wire
+ them in time – but even a basic implementation will add wow factor. For example, prepare a simple Solidity
+ function that returns a tourist’s data and call it using Ether.js or Web3.js from the portal when clicking “View
+ Blockchain Record”. Even if it returns a hash or dummy data, it shows integration.
+ Blockchain Layer (Digital ID & Logs)
+ Platform Choice: Use a blockchain that you can easily deploy a smart contract to within the hackathon.
+ Ethereum (on a testnet like Goerli or a local dev chain using Hardhat/Ganache) is a good choice, as many
+ libraries exist. Alternatively, since Self protocol works on Celo, you could use the Celo Alfajores testnet if
+ going with Self SDK. But to keep things simple and within your team’s skill, Ethereum or Polygon Mumbai
+ might be easiest for general smart contract deployment. 
+8
+Digital ID Storage & Verification: Design a basic smart contract to represent the Digital Tourist ID. This
+ contract can be very simple given time: e.g., 
+struct Tourist {
+ string name;
+ string nationality;
+ bytes32 passportHash;
+ uint256 tripEndTimestamp;
+ address addedBy;
+ }
+ mapping(uint256 => Tourist) public tourists;
+ uint256 public touristCount;
+ function registerTourist(string memory name, string memory nationality, bytes32
+ passportHash, uint256 tripEnd) public returns (uint256) {
+ touristCount++;
+ tourists[touristCount] = Tourist(name, nationality, passportHash, tripEnd,
+ msg.sender);
+ emit TouristRegistered(touristCount, msg.sender);
+ return touristCount;
+ }
+ This is just an illustrative snippet – adjust as needed. The idea is when KYC is done, you call
+ registerTourist (perhaps from a backend server acting on behalf of the app) to store the tourist info
+ on-chain. Storing full personal data on chain is normally not ideal for privacy, but since we’re in a hack
+ demo, we can store non-sensitive or hashed data. For instance, hash the passport number (to avoid
+ plaintext) using SHA-256 off-chain and store the hash. The digital ID could then simply be the index (1, 2, 3,
+ ...) or the transaction hash of this registration. This gives an immutable record that “Tourist #1 = John Doe
+ from USA, passport hash XYZ, valid until <date>” and no one can tamper with that. The blockchain acts as a
+ tamper-proof ledger for identity . If someone tries to modify an ID, they cannot without invalidating
+ the chain record. This meets the requirement of secure ID verification.
+ 1
+ 12
+ 13
+ If you pursue the Self protocol route: the Self SDK would handle a lot of this via zero-knowledge proofs. The
+ tourist would prove their passport is valid (likely by scanning it) and Self would add an identity
+ commitment to a registry on-chain . You might not need to write your own contract if using Self 
+you’d use their contracts (on Celo) and simply store the commitment. The advantage is privacy (no personal
+ details on chain, just proof of authenticity). However, integrating that in 24h is ambitious. If you have a team
+ member already familiar with it, great – you could let Self handle the heavy lifting of verification. Otherwise,
+ a custom contract as above is fine for demo purposes. You can even claim the concept of SSI (Self-Sovereign
+ Identity) without the full implementation.
+ • 
+Access Control: The contract can include basic role control. For example, you might designate
+ addresses for the Tourism Dept and Police. Perhaps only the tourism official (deployer or a known
+ address) can call 
+registerTourist (so random people can’t add fake IDs). And you might allow
+ police address to mark certain flags (like add an “incident” or mark the ID as void after use). This can
+ be done via 
+require(msg.sender == owner) checks or OpenZeppelin’s Ownable and Roles
+ 9
+libraries if time permits. Granular access (like family only seeing location but not personal data) will
+ mostly be handled off-chain in our prototype (through how we design the portals). 
+• 
+• 
+Incident & Alert Logs: Extend the contract to log critical events. E.g., define an event
+ SOSAlert(uint256 touristId, string location, uint256 timestamp) and an event
+ IncidentReport(uint256 touristId, string reportHash) . When an SOS is triggered, you
+ could emit 
+SOSAlert . However, note that writing to blockchain on every SOS in real-time has
+ downsides: transactions cost gas and take time to confirm, which is not ideal for immediate
+ emergency response. A compromise: handle immediate response off-chain, but later record the
+ incident on-chain for audit. For the hack, you might simulate recording one event: e.g., when the
+ police marks an SOS as resolved, you call a function 
+11
+ logIncident(touristId, details) that
+ stores a hash or IPFS link of the incident report and emits an event. That way you demonstrate an
+ immutable log of the incident for legal proof . If you want to get fancy, integrate IPFS to store
+ the actual report or evidence photos and save the CID on-chain. But that might be too much, so just
+ storing a hash of the report text in the contract is sufficient to show that the record is permanent.
+ Optional Incentive Mechanism: If you have time and creativity, you could add a token or reward
+ system. The idea was to reward community alerts or safe behavior. For instance, a tourist who
+ avoids high-risk areas or who reports incidents could earn “safety points” on their digital ID. Or local
+ volunteers who assist tourists could get tokens. Implementing fully is likely out of scope for 24h, but
+ you can mention it in your presentation. If you do want to show something: you could create a
+ simple ERC-20 token called SAFE and award some to a tourist after their trip if they had no incidents,
+ etc., just as a proof-of-concept. Or even simpler, a badge NFT that says “Safe Traveler”. This
+ gamification angle can be just theoretical unless you have extra hours at the end.
+ Development Tips (Blockchain): Keep the smart contract as straightforward as possible. Focus on the
+ function to register and possibly one to log incidents. Write and test the contract using Hardhat/Truffle
+ early in the hackathon, so you aren’t debugging blockchain issues last minute. After deploying to a testnet
+ or local chain, get the contract address and share it with the team. Use a library like Ether.js or Web3.js in
+ the app and portals to interact. Since time is limited, you can also cheat a bit: do the blockchain interactions
+ in the backend (Node.js can use ether.js to call contract) and have the frontend just call your backend. This
+ reduces the need to handle web3 in the mobile app directly (which can be painful if not already set up).
+ Essentially, the backend can act as a broker for blockchain calls (with an admin private key). The risk is
+ centralization, but for a hack demo it’s acceptable. Make sure to handle at least one end-to-end test:
+ Register a tourist via the app or a script and see that the Tourism portal can fetch that from the contract.
+ That will validate your integration. Also, if using a public testnet, mind the need for test tokens (ETH on
+ Goerli, etc.). You can use a faucet early so you have enough to pay gas for your transactions during demos. 
+IoT Layer (Optional Enhancements)
+ If time permits or if a team member is skilled in hardware, you could incorporate an IoT component to
+ showcase how it would work in remote or high-risk areas. This is optional and should only be attempted
+ after the core app and portals are functional. Some ideas for IoT integration:
+ • 
+Smart Bands/Tags: The concept is to give tourists a wearable device that continuously monitors
+ vitals (heart rate, maybe an accelerometer for falls) and tracks GPS even if the phone is off. In a 24h
+ 10
+hackathon, you likely can’t build a custom wearable from scratch, but you can simulate it. One way is
+ to use a spare smartphone or smartwatch as the “IoT device” and run a small app on it sending data.
+ For example, if someone has a smartwatch that can share heart rate data to a phone app, you could
+ capture that. If not, just simulate vital signs. You might create a simple script that sends random but
+ plausible heart rate values along with location to your backend as if it were an IoT band. The Police
+ dashboard could then have a section “Vitals” for an SOS case – e.g., “Heart rate: 140 bpm (high)”
+ indicating stress. Or if the band detects no pulse or a fall (e.g., no movement + sudden impact), it
+ could automatically trigger an SOS. This is similar to how modern smart watches have fall detection
+ and SOS features.
+ • 
+• 
+IoT Data Integration: Design your system such that it can accept data feeds from IoT devices
+ through APIs. For the demo, maybe have a toggle in the app that says “IoT mode” which then starts
+ sending additional data. If you have a teammate comfortable with Arduino/Raspberry Pi, they could
+ attempt to use a GPS module or sensor to send data to a server (like via MQTT or simple HTTP
+ posts). But given the crunch, a dummy feed is fine. For instance, write a Python script that every 5
+ seconds sends a POST request to your server with 
+{"id": touristId, "heartRate": 80, 
+"temp": 98.6} etc., and moves the location slightly. This can simulate a tourist hiking with a band.
+ On the backend, treat this data similarly to app data – store latest vitals in the tourist’s record. The
+ anomaly detection can then also check vitals (e.g., very high heart rate or none could trigger alert). 
+Emergency Triggers via IoT: Show that the wearable could have its own SOS button (for scenarios
+ where the phone might be lost or not reachable). You can emulate this by having your script trigger
+ the same SOS endpoint. The police dashboard wouldn’t know if it came from phone or band – but
+ you could mention that the band allows remote SOS. 
+If you cannot actually integrate a device, you can still mention and simulate these features in your
+ presentation. Perhaps prepare a mock screenshot of a wearable’s app or a photo of any device and say “This
+ would be the optional smart band tourists can wear for added safety – streaming heart rate and motion to
+ our system.” Judges appreciate acknowledging the IoT aspect even if not fully implemented.
+ Development Tips (IoT): Don’t let this distract from core app coding. Only work on it if one member is free
+ after finishing their main tasks. Simulation is perfectly fine. If using a simulation script, make sure it doesn’t
+ conflict with real app data (maybe use a different test tourist ID for IoT demo). Keep any IoT code separate
+ so it can be disabled if it misbehaves. If you have any existing device (like a fitness tracker) with an open API,
+ leveraging that could be cool – but keep integration minimal (maybe just reading heart rate via BLE). Ensure
+ any IoT data usage is reflected on the dashboards (like showing a heart icon with current pulse next to an
+ SOS).
+ Integration Strategy and Timeline
+ Building all these components in 24 hours is intense, but achievable with tight coordination and smart
+ scoping. Here’s a suggested approach to maximize progress:
+ 1. 
+Initial Setup (Hour 0-2): As a team, quickly choose your tech stack pieces and ensure everyone can
+ run the project environment (install necessary SDKs, set up a shared code repo). Divide tasks clearly
+ (as per roles above). Agree on data contracts between systems – e.g., what does the JSON for a
+ 11
+location update or SOS alert look like? What fields are on the tourist profile? Defining these early
+ avoids miscommunication later. Also decide on the tools: e.g., will you use Firebase for real-time DB
+ (which can save backend coding)? If yes, set up a Firestore and share access. If not, set up an Express
+ server template and perhaps a basic database (MySQL/Postgres or even just in-memory for
+ hackathon).
+ 2. 
+3. 
+4. 
+5. 
+6. 
+7. 
+8. 
+9. 
+10. 
+11. 
+12. 
+Blockchain Contract & Basic Backend (Hour 2-5): The blockchain developer can start writing the
+ smart contract and testing deployment. Meanwhile, the backend person (or the same person)
+ should scaffold the API endpoints (especially for SOS and for fetching locations). Even if using
+ Firebase, maybe write cloud functions for custom logic. By around hour 4 or 5, aim to have:
+ Smart contract compiled and deployed on a local testnet (and later consider deploying to a public
+ testnet if needed for demonstration).
+ A function to call 
+registerTourist on the contract (could be via a script or an HTTP endpoint).
+ A basic endpoint or DB setup to accept location updates and SOS signals. (For example, a /
+ location/update and 
+/sos that simply store the data in a known structure.)
+ Share with the team how to call these (so mobile developer can integrate).
+ Mobile App Core Features (Hour 3-8): The mobile dev should prioritize a working prototype of key
+ f
+ lows: registration -> main screen with map -> SOS button sending something. Use placeholders
+ f
+ irst: e.g., the map can be static image or just latitude/longitude text until you integrate the real map
+ SDK. Make sure the registration collects the needed fields and on submit, it calls either the backend
+ or directly the blockchain (depending on your integration plan). Since waiting for blockchain
+ transactions could slow testing, possibly have the backend immediately respond with a temp ID and
+ later confirm on-chain (for dev speed). Implement the panic button to call the backend API with
+ current location – even if the backend just logs it initially. By mid-development, the mobile app
+ should be able to: create a dummy tourist entry and send an SOS that the backend receives.
+ Web Portals Basic UI (Hour 5-10): In parallel, the web developers can start building the scaffold of
+ the dashboards. Initially focus on structure and live data integration later. For Tourism portal: set up
+ a page with a table for tourist IDs, a map component, and maybe some dummy stats. For Police
+ portal: set up the list for SOS and a map. Use dummy data or fake an SOS object to render the UI.
+ This way, the web devs can show progress early (like, “here’s how an alert will look”). It also helps to
+ refine the UI/UX before hooking up actual data. Around hour 8-10, aim to have the portals display
+ real data from the system:
+ Tourism portal listing an actual tourist from the contract/DB.
+ Police portal showing an SOS entry when the app triggers it (test this end-to-end: run the app, press
+ SOS, see it appear).
+ Map showing at least one point (could be a static example or the actual tourist location if available by
+ then).
+ Feature Completion and Integration (Hour 10-18): Once the skeletons are up, each team member
+ should flesh out remaining features:
+ 12
+13. 
+14. 
+15. 
+16. 
+Mobile: implement geo-fence checking (you can hardcode one risk zone and test entering it by
+ faking coordinates), add multilingual text (maybe just two languages due to time), improve the UI
+ (icons, colors for safety score). Ensure it continuously sends location updates (maybe on a timer).
+ Blockchain/Backend: deploy the contract to a stable network (if using public testnet, do it now so you
+ have time to get a block explorer link, etc.), connect the backend to it (e.g., when the app registers,
+ actually call the contract and get a real ID back). Also, implement the anomaly check routine on the
+ backend. Possibly prepare some code to simulate movements for testing anomalies. 
+Tourism Portal: integrate data feeds – e.g., fetch the tourist list from either the contract (using web3)
+ or from the registration backend. Integrate a mapping library properly and plot real data. Implement
+ heatmap/cluster if possible (or use a simple approach like grouping by area name). Add the feedback
+ chart (you can input some fake feedback entries manually to test). 
+Police Portal: finalize the SOS handling – marking resolved (you can just remove from list or change
+ its status in DB), generate report (could just open a new window with formatted text; if fancy, use a
+ PDF library like jsPDF). Add the anomaly warnings list (pull from backend flags). Test the “view ID”
+ functionality by connecting to blockchain data for an SOS tourist. 
+During this phase, continuous integration is key: frequently run end-to-end tests where one of you acts as a
+ tourist on the app and another watches the portals. This will reveal any mismatches (for instance, maybe
+ the location format lat/lng gets misparsed, or timezones are off, etc.). Fix those in this window.
+ 1. 
+2. 
+3. 
+4. 
+5. 
+6. 
+7. 
+8. 
+9. 
+Polish and Optional IoT (Hour 18-22): By around 18 hours in, strive to have a mostly working
+ system. Now focus on polish and any stretch goals:
+ UI polish: make sure the app and portals are user-friendly (large SOS button, clear text, maybe an
+ intro screen explaining features). Ensure multilingual text makes sense (even if you only managed
+ partial translations, that’s fine).
+ Performance: If the map is too slow with many points, perhaps limit the number of updates or use
+ clustering. If an API call is too slow (like waiting 15 seconds for blockchain confirmation), consider
+ asynchronous handling (e.g., show “ID pending confirmation” in the app and proceed).
+ IoT simulation: if doing it, get your script or device to send data and verify the police portal can
+ display it. Possibly prepare a short demo of a “fall detected”: you could, for example, have your script
+ send an SOS automatically and an alert “fall detected via band” in the message. 
+Incentives: if you want to demo a token, you can simply mint some dummy token and show it in the
+ tourist’s profile (e.g., “SafetyCoins: 100” for completing trip safely). This can be just a static value or a
+ quick solidity function 
+rewardTourist(id) that you call manually.
+ Error handling: Even in a hack, try to handle the main error cases gracefully. Ex: If the blockchain call
+ fails, the app should not crash – show a message “Network busy, try again.” If GPS is off, prompt the
+ user to enable it. These details can set your project apart in presentation.
+ Testing & Demo Prep (Hour 22-24): In the final stretch, do a complete run-through of the demo
+ story you’ll present:
+ Demo Script: Typically, you’ll show: Tourist registers -> Official sees ID -> Tourist moves on map ->
+ Tourist enters danger zone -> Tourist presses SOS -> Police sees alert and info -> Police responds and
+ closes incident -> Show how data is logged and how feedback works. Write down this flow and
+ ensure each step works quickly. 
+Dry Run: Have team members play roles (one as tourist with the app on a phone, others manning
+ the portals on laptops, etc.). Practice the timing so that, for example, when SOS is pressed, you know
+ 13
+10. 
+11. 
+12. 
+where to look on the police screen and it’s refreshed. You can simulate the tourist movement by
+ physically moving if on mobile, or cheat by sending a manual location update to trigger geo-fence.
+ Backup Plans: Identify any fragility. If the internet is unreliable for the blockchain call, maybe have a
+ pre-registered ID to show. If the live map might not load, have a screenshot ready. If time in demo is
+ short, you might prepare a short video of the workflow as a fallback. But usually live demos score
+ higher if they work.
+ Presentation Slides: If allowed, prepare a few slides to explain the problem and your solution
+ before the live demo. Use visuals: an architecture diagram (even a simple boxes-and-arrows showing
+ App -> Backend -> Blockchain -> Portals) can help the audience grasp it. Include your key innovative
+ points like “Blockchain-based Digital ID”, “Geo-fencing & Safety Score AI”, “SOS alert to all
+ stakeholders in real-time”, etc. Keep it high-level; the demo will show details.
+ Final Touches: Double-check citations or any references if needed in submission, ensure all team
+ members know what part to speak to if presenting. 
+By following a tight schedule and keeping each feature minimal yet functional, you can demonstrate a
+ comprehensive tourist safety system within 24 hours. Remember to emphasize during judging how the
+ pieces work together: the blockchain provides trust and data integrity for IDs, the mobile app empowers
+ tourists with information and an emergency lifeline, and the authority dashboards enable fast, coordinated
+ response with data-driven insights. This holistic approach leverages AI, blockchain, and geo-fencing to
+ create a safer environment for travelers
+ 14
+ 1
+ , which is exactly the goal of the project.
+ References (Key Sources and Inspiration)
+ • 
+• 
+• 
+• 
+2
+ Devpost Project (“Smart Tourist Safety with AI, Geo-Fencing & Blockchain ID”) – for system inspiration
+ and confirmation of using geo-fencing, AI, and blockchain together . 
+Self Protocol Docs – for blockchain-based digital identity verification (passport-based zk-proof
+ identity)
+ 15
+ 14
+ 1
+ . This informed our Digital Tourist ID approach. 
+Investopedia (Blockchain Travel) – notes that the travel industry is exploring blockchain for
+ managing traveler identities securely , reinforcing our use of a blockchain ID. 
+Life360 App – example of a family safety app with SOS alerts sending precise location to family and
+ responders
+ 5
+ • 
+• 
+, which parallels our panic button functionality. 
+Safetipin App – demonstrates computing a safety score for locations and notifying users (and
+ friends) when in unsafe areas
+ 16
+ 6
+ , which guided our Auto Safety Score and friend tracking
+ features. 
+Telangana 112 Unified Emergency – real-world example of a unified emergency number
+ integrating police, fire, medical services
+ 10
+ on the police portal. 
+. This inspired our unified emergency dispatch concept
+ 1
+ 4
+ 8
+ 9
+ 14
+ Smart Tourist Safety with AI, Geo-Fencing & Blockchain ID | Devpost
+ https://devpost.com/software/smart-tourist-safety-with-ai-geo-fencing-blockchain-id
+ 2
+ ETHGlobal
+ https://ethglobal.com/events/taipei/prizes/self-protocol
+ 14
+3
+ Presenting the Safe Place API – stay safe in over 65000 cit
+ https://developers.amadeus.com/blog/announcing-safe-place-api-geosure
+ 5
+ Life360: Stay Connected & Safe - Apps on Google Play
+ https://play.google.com/store/apps/details?id=com.life360.android.safetymapd&hl=en_US
+ 6
+ 16
+ Safetipin | Methodology
+ https://safetipin.com/methodology/
+ 7
+ Google Cloud partners with ZKP identity verification protocol Self
+ https://www.biometricupdate.com/202507/google-cloud-partners-with-zkp-identity-verification-protocol-self
+ 10
+ Now a unified emergency contact, dial 112 for all kinds of distress - Telangana Today
+ https://telanganatoday.com/now-a-unified-emergency-contact-dial-112-for-all-kinds-of-distress
+ 11
+ 12
+ 13
+ Architecture | Self Docs
+ https://docs.self.xyz/technical-docs/architecture
+ 15
+ 4 Companies Using Blockchain to Change Travel
+ https://www.investopedia.com/news/6-companies-using-blockchain-change-travel-0/
+ 15

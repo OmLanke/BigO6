@@ -1,36 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'core/theme/app_theme.dart';
+import 'core/router/app_router.dart';
+import 'providers/location_provider.dart';
+import 'providers/tourist_provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const TravelApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class TravelApp extends StatelessWidget {
+  const TravelApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Travel App',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
-          brightness: Brightness.dark,
-        ),
-      ),
-      home: Scaffold(
-        appBar: AppBar(title: Text('Travel App'), centerTitle: true),
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Center(child: Image(image: AssetImage("assets/Kiryu.jpg"))),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [Text('BAKA MITAI'), Icon(Icons.person)],
-            ),
-          ],
-        ),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => LocationProvider()),
+        ChangeNotifierProvider(create: (_) => TouristProvider()),
+      ],
+      child: MaterialApp.router(
+        title: 'Tourist Safety App',
+        theme: AppTheme.darkTheme,
+        routerConfig: AppRouter.router,
+        debugShowCheckedModeBanner: false,
       ),
     );
   }
