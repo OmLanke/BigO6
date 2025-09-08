@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tourist Safety Score Predictor - Test Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .form-section, .results-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+
+        .section-title {
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        input[type="number"], input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus, input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        }
+
+        .result-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .score-display {
+            font-size: 3em;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .score-very-safe {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        }
+
+        .score-safe {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+
+        .score-moderate {
+            background: linear-gradient(135deg, #f39c12 0%, #d35400 100%);
+        }
+
+        .score-high-risk {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .score-very-high-risk {
+            background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+        }
+
+        .feature-importance {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .feature-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin-bottom: 5px;
+            background: #ecf0f1;
+            border-radius: 5px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .api-status {
+            background: #2ecc71;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .api-status.error {
+            background: #e74c3c;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ Tourist Safety Score Predictor</h1>
+            <p>AI-powered safety assessment for tourist destinations</p>
+        </div>
+
+        <div class="content">
+            <div class="form-section">
+                <h2 class="section-title">📊 Input Data</h2>
+                
+                <div id="api-status" class="api-status">
+                    Checking API connection...
+                </div>
+
+                <form id="predictionForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="year">Year</label>
+                            <input type="number" id="year" name="year" value="2024" min="2000" max="2030">
+                        </div>
+                        <div class="form-group">
+                            <label for="population">Population</label>
+                            <input type="number" id="population" name="population" value="50000" min="1000">
+                        </div>
+                    </div>
+
+                    <h3 style="margin: 20px 0 10px 0; color: #e74c3c;">🚨 Crime Statistics</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="total_crimes">Total Crimes</label>
+                            <input type="number" id="total_crimes" name="total_crimes" value="25" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="crime_rate_per_100k">Crime Rate per 100k</label>
+                            <input type="number" id="crime_rate_per_100k" name="crime_rate_per_100k" value="50" min="0" step="0.01">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="murder_cases">Murder Cases</label>
+                            <input type="number" id="murder_cases" name="murder_cases" value="1" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="rape_cases">Rape Cases</label>
+                            <input type="number" id="rape_cases" name="rape_cases" value="2" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="theft_cases">Theft Cases</label>
+                            <input type="number" id="theft_cases" name="theft_cases" value="15" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="robbery_cases">Robbery Cases</label>
+                            <input type="number" id="robbery_cases" name="robbery_cases" value="3" min="0">
+                        </div>
+                    </div>
+
+                    <h3 style="margin: 20px 0 10px 0; color: #f39c12;">🌪️ Natural Disasters</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="flood_events">Flood Events</label>
+                            <input type="number" id="flood_events" name="flood_events" value="3" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="earthquake_events">Earthquake Events</label>
+                            <input type="number" id="earthquake_events" name="earthquake_events" value="2" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="landslide_events">Landslide Events</label>
+                            <input type="number" id="landslide_events" name="landslide_events" value="1" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="forest_fires">Forest Fires</label>
+                            <input type="number" id="forest_fires" name="forest_fires" value="2" min="0">
+                        </div>
+                    </div>
+
+                    <h3 style="margin: 20px 0 10px 0; color: #3498db;">🏥 Infrastructure</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="hospitals_per_100k">Hospitals per 100k</label>
+                            <input type="number" id="hospitals_per_100k" name="hospitals_per_100k" value="25" min="0" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label for="police_stations_per_100k">Police Stations per 100k</label>
+                            <input type="number" id="police_stations_per_100k" name="police_stations_per_100k" value="10" min="0" step="0.1">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="mobile_network_coverage_percent">Mobile Coverage %</label>
+                            <input type="number" id="mobile_network_coverage_percent" name="mobile_network_coverage_percent" value="85" min="0" max="100" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label for="internet_connectivity_percent">Internet Coverage %</label>
+                            <input type="number" id="internet_connectivity_percent" name="internet_connectivity_percent" value="70" min="0" max="100" step="0.1">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 25px;">
+                        <button type="button" class="btn" onclick="loadExample()">📝 Load Example Data</button>
+                        <button type="button" class="btn btn-secondary" onclick="clearForm()">🗑️ Clear Form</button>
+                        <button type="submit" class="btn btn-success">🔮 Predict Safety Score</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="results-section">
+                <h2 class="section-title">📈 Results</h2>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing safety data...</p>
+                </div>
+
+                <div id="results" style="display: none;">
+                    <div class="result-card">
+                        <h3>Safety Score</h3>
+                        <div id="scoreDisplay" class="score-display">
+                            --
+                        </div>
+                        <div id="interpretation" style="text-align: center; font-size: 1.2em; font-weight: bold;">
+                            Enter data to get prediction
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <h3>Risk Assessment</h3>
+                        <div id="riskDetails">
+                            <p>Complete the form and click "Predict Safety Score" to see detailed risk assessment.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <h3>🔑 Feature Importance</h3>
+                    <button type="button" class="btn btn-secondary" onclick="loadFeatureImportance()">📊 Load Feature Importance</button>
+                    <div id="featureImportance" class="feature-importance">
+                        <p>Click the button above to load feature importance data.</p>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <h3>🔧 API Testing</h3>
+                    <button type="button" class="btn btn-secondary" onclick="testApiHealth()">❤️ Test API Health</button>
+                    <button type="button" class="btn btn-secondary" onclick="loadApiExample()">📋 Load API Example</button>
+                    <div id="apiTest">
+                        <p>Use the buttons above to test API endpoints.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000';
+
+        // Check API status on load
+        window.onload = function() {
+            testApiHealth();
+        };
+
+        async function testApiHealth() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+                
+                const statusDiv = document.getElementById('api-status');
+                if (response.ok && data.status === 'healthy') {
+                    statusDiv.className = 'api-status';
+                    statusDiv.innerHTML = '✅ API is running and model is loaded';
+                } else {
+                    statusDiv.className = 'api-status error';
+                    statusDiv.innerHTML = '❌ API is not responding properly';
+                }
+                
+                document.getElementById('apiTest').innerHTML = `
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                const statusDiv = document.getElementById('api-status');
+                statusDiv.className = 'api-status error';
+                statusDiv.innerHTML = '❌ Cannot connect to API. Make sure the server is running on port 5000.';
+                
+                document.getElementById('apiTest').innerHTML = `
+                    <div class="error">Error: ${error.message}</div>
+                `;
+            }
+        }
+
+        async function loadApiExample() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/example`);
+                const data = await response.json();
+                
+                document.getElementById('apiTest').innerHTML = `
+                    <h4>Example API Input:</h4>
+                    <pre>${JSON.stringify(data.example_input, null, 2)}</pre>
+                    <h4>Usage Instructions:</h4>
+                    <pre>${JSON.stringify(data.usage, null, 2)}</pre>
+                `;
+            } catch (error) {
+                document.getElementById('apiTest').innerHTML = `
+                    <div class="error">Error loading example: ${error.message}</div>
+                `;
+            }
+        }
+
+        async function loadFeatureImportance() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/feature_importance`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let html = '<h4>Top Features Affecting Safety:</h4>';
+                    const top10 = data.features.slice(0, 10);
+                    const top10Values = data.importance_values.slice(0, 10);
+                    
+                    for (let i = 0; i < top10.length; i++) {
+                        const percentage = ((top10Values[i] / Math.max(...top10Values)) * 100).toFixed(1);
+                        html += `
+                            <div class="feature-item">
+                                <span>${top10[i]}</span>
+                                <span>${top10Values[i].toFixed(4)} (${percentage}%)</span>
+                            </div>
+                        `;
+                    }
+                    
+                    document.getElementById('featureImportance').innerHTML = html;
+                } else {
+                    document.getElementById('featureImportance').innerHTML = `
+                        <div class="error">${data.error}</div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('featureImportance').innerHTML = `
+                    <div class="error">Error loading feature importance: ${error.message}</div>
+                `;
+            }
+        }
+
+        function loadExample() {
+            // Load example data into form
+            const exampleData = {
+                year: 2024,
+                population: 50000,
+                total_crimes: 25,
+                crime_rate_per_100k: 50.0,
+                murder_cases: 1,
+                rape_cases: 2,
+                theft_cases: 15,
+                robbery_cases: 3,
+                flood_events: 3,
+                earthquake_events: 2,
+                landslide_events: 1,
+                forest_fires: 2,
+                hospitals_per_100k: 25.0,
+                police_stations_per_100k: 10.0,
+                mobile_network_coverage_percent: 85.0,
+                internet_connectivity_percent: 70.0
+            };
+            
+            Object.keys(exampleData).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.value = exampleData[key];
+                }
+            });
+        }
+
+        function clearForm() {
+            document.getElementById('predictionForm').reset();
+            document.getElementById('results').style.display = 'none';
+        }
+
+        function getFormData() {
+            const formData = new FormData(document.getElementById('predictionForm'));
+            const data = {};
+            
+            // Convert form data to proper types
+            for (let [key, value] of formData.entries()) {
+                const element = document.getElementById(key);
+                if (element && element.type === 'number') {
+                    data[key] = parseFloat(value) || 0;
+                } else {
+                    data[key] = value;
+                }
+            }
+            
+            // Add missing required fields with default values
+            const defaultFields = {
+                kidnapping_cases: 1,
+                burglary_cases: 2,
+                fraud_cases: 1,
+                domestic_violence_cases: 3,
+                crimes_against_women: 5,
+                crimes_against_tourists: 2,
+                insurgency_incidents: 0,
+                flood_affected_population: 1000,
+                landslide_affected_population: 200,
+                max_earthquake_magnitude: 5.5,
+                lightning_strikes: 10,
+                cyclone_events: 1,
+                road_accidents: 15,
+                road_fatalities: 2,
+                road_injuries: 25,
+                railway_accidents: 0,
+                aviation_incidents: 0,
+                emergency_response_time_minutes: 20.0,
+                annual_rainfall_mm: 2500.0,
+                rainfall_variability_coefficient: 0.25,
+                max_temperature_celsius: 30.0,
+                min_temperature_celsius: 15.0,
+                extreme_weather_days: 25,
+                monsoon_onset_deviation_days: 10,
+                fire_stations_per_100k: 5.0,
+                road_connectivity_index: 75.0,
+                power_supply_reliability_percent: 80.0
+            };
+            
+            Object.keys(defaultFields).forEach(key => {
+                if (!(key in data)) {
+                    data[key] = defaultFields[key];
+                }
+            });
+            
+            return data;
+        }
+
+        function getScoreClass(score) {
+            // Ensure score is within 0-100 range
+            score = Math.max(0, Math.min(100, score));
+            
+            if (score >= 80) return 'score-very-safe';
+            if (score >= 65) return 'score-safe';
+            if (score >= 50) return 'score-moderate';
+            if (score >= 35) return 'score-high-risk';
+            return 'score-very-high-risk';
+        }
+
+        function getRiskDetails(score, interpretation) {
+            // Ensure score is within 0-100 range
+            score = Math.max(0, Math.min(100, score));
+            
+            const details = {
+                'Very Safe': {
+                    icon: '🟢',
+                    description: 'This destination has excellent safety conditions with low crime rates and minimal risks.',
+                    recommendations: ['Ideal for all types of tourists', 'Family-friendly destination', 'Solo travel recommended']
+                },
+                'Safe': {
+                    icon: '🟡',
+                    description: 'This destination is generally safe with manageable risks.',
+                    recommendations: ['Good for most tourists', 'Basic precautions advised', 'Monitor local conditions']
+                },
+                'Moderate Risk': {
+                    icon: '🟠',
+                    description: 'This destination has some safety concerns that require attention.',
+                    recommendations: ['Exercise increased caution', 'Travel in groups when possible', 'Stay informed about local conditions']
+                },
+                'High Risk': {
+                    icon: '🔴',
+                    description: 'This destination has significant safety risks.',
+                    recommendations: ['Reconsider travel plans', 'If traveling, take extensive precautions', 'Monitor official travel advisories']
+                },
+                'Very High Risk': {
+                    icon: '🟣',
+                    description: 'This destination has severe safety concerns.',
+                    recommendations: ['Avoid non-essential travel', 'Consider alternative destinations', 'Consult official travel warnings']
+                }
+            };
+            
+            const detail = details[interpretation] || details['Moderate Risk'];
+            
+            return `
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <span style="font-size: 2em;">${detail.icon}</span>
+                    <h4 style="margin: 10px 0;">${interpretation}</h4>
+                </div>
+                <p style="margin-bottom: 15px;"><strong>Assessment:</strong> ${detail.description}</p>
+                <h5>Recommendations:</h5>
+                <ul style="margin-left: 20px;">
+                    ${detail.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                </ul>
+            `;
+        }
+
+        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const loadingDiv = document.getElementById('loading');
+            const resultsDiv = document.getElementById('results');
+            
+            // Show loading
+            loadingDiv.style.display = 'block';
+            resultsDiv.style.display = 'none';
+            
+            try {
+                const inputData = getFormData();
+                
+                const response = await fetch(`${API_BASE_URL}/predict`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(inputData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    const score = Math.max(0, Math.min(100, result.predicted_safety_score));
+                    const interpretation = result.interpretation;
+                    
+                    // Update score display
+                    const scoreDisplay = document.getElementById('scoreDisplay');
+                    scoreDisplay.textContent = score.toFixed(1);
+                    scoreDisplay.className = `score-display ${getScoreClass(score)}`;
+                    
+                    // Update interpretation
+                    document.getElementById('interpretation').textContent = interpretation;
+                    
+                    // Update risk details
+                    document.getElementById('riskDetails').innerHTML = getRiskDetails(score, interpretation);
+                    
+                    // Show results
+                    resultsDiv.style.display = 'block';
+                } else {
+                    throw new Error(result.error || 'Prediction failed');
+                }
+            } catch (error) {
+                document.getElementById('results').innerHTML = `
+                    <div class="error">Error: ${error.message}</div>
+                `;
+                resultsDiv.style.display = 'block';
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
