@@ -32,6 +32,13 @@ export default function Page({
                             </Button>
                         </Link>
                     </div>
+                    <div className="hidden sm:flex gap-2">
+                        <Link href="/police/tourist-details/SOS-001/fir">
+                            <Button size="sm" className="bg-zinc-400">
+                                Decline
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
             </div>
 

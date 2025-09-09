@@ -3,6 +3,7 @@ import Image from "next/image";
 import React from "react";
 import TourRakshaLogo from "../../../public/images/TourRakshaLogo.png";
 import { AuroraText } from "../magicui/aurora-text";
+import Link from "next/link";
 
 export default function Hero() {
   return (
@@ -35,9 +36,12 @@ export default function Hero() {
             AI, Geo-Fencing, and Blockchain powered digital IDs to keep tourists safe in real time.
           </p>
           <div className="flex gap-4">
+            <Link href="/login">
+            
             <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
               Get Started
             </button>
+            </Link>
             <button className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100">
               Download App
             </button>
