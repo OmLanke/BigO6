@@ -1,4 +1,4 @@
-import { PrismaClient } from '../generated/prisma/index.js';
+import { PrismaClient } from "../generated/prisma/index.js";
 
 const prisma = new PrismaClient();
 
@@ -6,11 +6,11 @@ const prisma = new PrismaClient();
 export const getSafetyScore = async (req, res) => {
   try {
     const { userId, location, latitude, longitude } = req.query;
-    
+
     if (!latitude || !longitude) {
       return res.status(400).json({
         success: false,
-        message: 'Latitude and longitude are required'
+        message: "Latitude and longitude are required",
       });
     }
 
@@ -21,9 +21,9 @@ export const getSafetyScore = async (req, res) => {
         where: {
           userId_location: {
             userId,
-            location
-          }
-        }
+            location,
+          },
+        },
       });
     }
 
@@ -44,28 +44,28 @@ export const getSafetyScore = async (req, res) => {
             latitude: parseFloat(latitude),
             longitude: parseFloat(longitude),
             score: calculatedScore.score,
-            factors: calculatedScore.factors
-          }
+            factors: calculatedScore.factors,
+          },
         });
       } else {
         // Return calculated score without saving
         return res.json({
           success: true,
-          data: calculatedScore
+          data: calculatedScore,
         });
       }
     }
 
     res.json({
       success: true,
-      data: safetyScore
+      data: safetyScore,
     });
   } catch (error) {
-    console.error('Error fetching safety score:', error);
+    console.error("Error fetching safety score:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch safety score',
-      error: error.message
+      message: "Failed to fetch safety score",
+      error: error.message,
     });
   }
 };
@@ -93,33 +93,34 @@ async function calculateSafetyScore(latitude, longitude, location) {
       historicalIncidents: Math.random() * 100, // 0-100 (lower is safer)
       infrastructure: Math.random() * 100, // 0-100 (higher is safer)
       medicalFacilities: Math.random() * 100, // 0-100 (higher is safer)
-      connectivity: Math.random() * 100 // 0-100 (higher is safer)
+      connectivity: Math.random() * 100, // 0-100 (higher is safer)
     };
 
     // Calculate weighted score
     const weights = {
       crimeRate: 0.25,
       policePresence: 0.15,
-      crowdDensity: 0.10,
-      timeOfDay: 0.10,
+      crowdDensity: 0.1,
+      timeOfDay: 0.1,
       weatherConditions: 0.05,
-      touristAdvisory: 0.10,
+      touristAdvisory: 0.1,
       historicalIncidents: 0.15,
       infrastructure: 0.05,
       medicalFacilities: 0.05,
-      connectivity: 0.05
+      connectivity: 0.05,
     };
 
     let weightedScore = 0;
-    
+
     // For factors where lower is better (crime, incidents)
     weightedScore += (100 - factors.crimeRate) * weights.crimeRate;
-    weightedScore += (100 - factors.historicalIncidents) * weights.historicalIncidents;
-    
+    weightedScore +=
+      (100 - factors.historicalIncidents) * weights.historicalIncidents;
+
     // For crowd density, moderate is best (bell curve)
     const crowdOptimal = Math.abs(factors.crowdDensity - 50);
     weightedScore += (100 - crowdOptimal * 2) * weights.crowdDensity;
-    
+
     // For other factors, higher is better
     weightedScore += factors.policePresence * weights.policePresence;
     weightedScore += factors.timeOfDay * weights.timeOfDay;
@@ -136,13 +137,13 @@ async function calculateSafetyScore(latitude, longitude, location) {
       score: Math.round(finalScore * 100) / 100, // Round to 2 decimal places
       factors,
       calculation: {
-        method: 'weighted_average',
+        method: "weighted_average",
         weights,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     };
   } catch (error) {
-    console.error('Error calculating safety score:', error);
+    console.error("Error calculating safety score:", error);
     throw error;
   }
 }
@@ -150,7 +151,7 @@ async function calculateSafetyScore(latitude, longitude, location) {
 // Helper function to get time of day score
 function getTimeOfDayScore() {
   const hour = new Date().getHours();
-  
+
   // Safer during daytime (6 AM - 10 PM)
   if (hour >= 6 && hour <= 22) {
     return 80 + Math.random() * 20; // 80-100
@@ -169,28 +170,28 @@ export const updateSafetyScore = async (req, res) => {
 
     const safetyScore = await prisma.safetyScore.update({
       where: { id },
-      data: updateData
+      data: updateData,
     });
 
     res.json({
       success: true,
       data: safetyScore,
-      message: 'Safety score updated successfully'
+      message: "Safety score updated successfully",
     });
   } catch (error) {
-    console.error('Error updating safety score:', error);
-    
-    if (error.code === 'P2025') {
+    console.error("Error updating safety score:", error);
+
+    if (error.code === "P2025") {
       return res.status(404).json({
         success: false,
-        message: 'Safety score not found'
+        message: "Safety score not found",
       });
     }
 
     res.status(500).json({
       success: false,
-      message: 'Failed to update safety score',
-      error: error.message
+      message: "Failed to update safety score",
+      error: error.message,
     });
   }
 };
@@ -203,28 +204,28 @@ export const getUserSafetyScores = async (req, res) => {
 
     const safetyScores = await prisma.safetyScore.findMany({
       where: { userId },
-      orderBy: { updatedAt: 'desc' },
+      orderBy: { updatedAt: "desc" },
       take: parseInt(limit),
       include: {
         user: {
           select: {
             id: true,
-            name: true
-          }
-        }
-      }
+            name: true,
+          },
+        },
+      },
     });
 
     res.json({
       success: true,
-      data: safetyScores
+      data: safetyScores,
     });
   } catch (error) {
-    console.error('Error fetching user safety scores:', error);
+    console.error("Error fetching user safety scores:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch safety scores',
-      error: error.message
+      message: "Failed to fetch safety scores",
+      error: error.message,
     });
   }
 };
@@ -235,27 +236,27 @@ export const deleteSafetyScore = async (req, res) => {
     const { id } = req.params;
 
     await prisma.safetyScore.delete({
-      where: { id }
+      where: { id },
     });
 
     res.json({
       success: true,
-      message: 'Safety score deleted successfully'
+      message: "Safety score deleted successfully",
     });
   } catch (error) {
-    console.error('Error deleting safety score:', error);
-    
-    if (error.code === 'P2025') {
+    console.error("Error deleting safety score:", error);
+
+    if (error.code === "P2025") {
       return res.status(404).json({
         success: false,
-        message: 'Safety score not found'
+        message: "Safety score not found",
       });
     }
 
     res.status(500).json({
       success: false,
-      message: 'Failed to delete safety score',
-      error: error.message
+      message: "Failed to delete safety score",
+      error: error.message,
     });
   }
 };
@@ -264,44 +265,48 @@ export const deleteSafetyScore = async (req, res) => {
 export const getAreaSafetyOverview = async (req, res) => {
   try {
     const { latitude, longitude, radius = 5 } = req.query;
-    
+
     if (!latitude || !longitude) {
       return res.status(400).json({
         success: false,
-        message: 'Latitude and longitude are required'
+        message: "Latitude and longitude are required",
       });
     }
 
     // Get all safety scores in the area
     const safetyScores = await prisma.safetyScore.findMany({
-      orderBy: { updatedAt: 'desc' }
+      orderBy: { updatedAt: "desc" },
     });
 
     // Filter by distance
     const lat1 = parseFloat(latitude);
     const lon1 = parseFloat(longitude);
     const radiusKm = parseFloat(radius);
-    
-    const filteredScores = safetyScores.filter(score => {
+
+    const filteredScores = safetyScores.filter((score) => {
       const lat2 = score.latitude;
       const lon2 = score.longitude;
-      
+
       // Calculate distance using Haversine formula
       const R = 6371; // Earth's radius in km
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const dLat = ((lat2 - lat1) * Math.PI) / 180;
+      const dLon = ((lon2 - lon1) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+          Math.cos((lat2 * Math.PI) / 180) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       const distance = R * c;
-      
+
       return distance <= radiusKm;
     });
 
     // Calculate area statistics
-    const scores = filteredScores.map(s => s.score);
-    const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+    const scores = filteredScores.map((s) => s.score);
+    const avgScore =
+      scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
     const minScore = scores.length > 0 ? Math.min(...scores) : 0;
     const maxScore = scores.length > 0 ? Math.max(...scores) : 0;
 
@@ -313,17 +318,17 @@ export const getAreaSafetyOverview = async (req, res) => {
           minimumScore: minScore,
           maximumScore: maxScore,
           totalLocations: filteredScores.length,
-          searchRadius: radiusKm
+          searchRadius: radiusKm,
         },
-        locations: filteredScores
-      }
+        locations: filteredScores,
+      },
     });
   } catch (error) {
-    console.error('Error fetching area safety overview:', error);
+    console.error("Error fetching area safety overview:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch area safety overview',
-      error: error.message
+      message: "Failed to fetch area safety overview",
+      error: error.message,
     });
   }
 };

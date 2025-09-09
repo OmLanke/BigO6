@@ -65,7 +65,8 @@ class TouristProfile {
       passportNumber: json['passportNumber'] ?? 'M12345678',
       nationality: json['nationality'] ?? 'India',
       emergencyContact: json['emergencyContactName'] ?? 'Emergency Contact',
-      emergencyContactNumber: json['emergencyContactPhone'] ?? '+91-98765-43210',
+      emergencyContactNumber:
+          json['emergencyContactPhone'] ?? '+91-98765-43210',
       tripStartDate: DateTime.now().subtract(const Duration(days: 1)),
       tripEndDate: DateTime.now().add(const Duration(days: 6)),
       plannedLocations: const [

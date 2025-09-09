@@ -1,4 +1,4 @@
-import { PrismaClient } from '../generated/prisma/index.js';
+import { PrismaClient } from "../generated/prisma/index.js";
 
 const prisma = new PrismaClient();
 
@@ -6,47 +6,53 @@ const prisma = new PrismaClient();
 export const recordLocation = async (req, res) => {
   try {
     const locationData = req.body;
-    
+
     // Validate required fields
-    if (!locationData.userId || !locationData.latitude || !locationData.longitude) {
+    if (
+      !locationData.userId ||
+      !locationData.latitude ||
+      !locationData.longitude
+    ) {
       return res.status(400).json({
         success: false,
-        message: 'User ID, latitude, and longitude are required'
+        message: "User ID, latitude, and longitude are required",
       });
     }
 
     const location = await prisma.locationData.create({
       data: {
         ...locationData,
-        timestamp: locationData.timestamp ? new Date(locationData.timestamp) : new Date()
+        timestamp: locationData.timestamp
+          ? new Date(locationData.timestamp)
+          : new Date(),
       },
       include: {
         user: {
           select: {
             id: true,
-            name: true
-          }
+            name: true,
+          },
         },
         trip: {
           select: {
             id: true,
-            status: true
-          }
-        }
-      }
+            status: true,
+          },
+        },
+      },
     });
 
     res.status(201).json({
       success: true,
       data: location,
-      message: 'Location recorded successfully'
+      message: "Location recorded successfully",
     });
   } catch (error) {
-    console.error('Error recording location:', error);
+    console.error("Error recording location:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to record location',
-      error: error.message
+      message: "Failed to record location",
+      error: error.message,
     });
   }
 };
@@ -56,7 +62,7 @@ export const getUserLocationHistory = async (req, res) => {
   try {
     const { userId } = req.params;
     const { limit = 100, tripId } = req.query;
-    
+
     const where = { userId };
     if (tripId) {
       where.tripId = tripId;
@@ -70,24 +76,24 @@ export const getUserLocationHistory = async (req, res) => {
             id: true,
             status: true,
             tripStartDate: true,
-            tripEndDate: true
-          }
-        }
+            tripEndDate: true,
+          },
+        },
       },
-      orderBy: { timestamp: 'desc' },
-      take: parseInt(limit)
+      orderBy: { timestamp: "desc" },
+      take: parseInt(limit),
     });
 
     res.json({
       success: true,
-      data: locations
+      data: locations,
     });
   } catch (error) {
-    console.error('Error fetching location history:', error);
+    console.error("Error fetching location history:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch location history',
-      error: error.message
+      message: "Failed to fetch location history",
+      error: error.message,
     });
   }
 };
@@ -96,43 +102,43 @@ export const getUserLocationHistory = async (req, res) => {
 export const getCurrentLocation = async (req, res) => {
   try {
     const { userId } = req.params;
-    
+
     const location = await prisma.locationData.findFirst({
       where: { userId },
-      orderBy: { timestamp: 'desc' },
+      orderBy: { timestamp: "desc" },
       include: {
         user: {
           select: {
             id: true,
-            name: true
-          }
+            name: true,
+          },
         },
         trip: {
           select: {
             id: true,
-            status: true
-          }
-        }
-      }
+            status: true,
+          },
+        },
+      },
     });
 
     if (!location) {
       return res.status(404).json({
         success: false,
-        message: 'No location data found for user'
+        message: "No location data found for user",
       });
     }
 
     res.json({
       success: true,
-      data: location
+      data: location,
     });
   } catch (error) {
-    console.error('Error fetching current location:', error);
+    console.error("Error fetching current location:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch current location',
-      error: error.message
+      message: "Failed to fetch current location",
+      error: error.message,
     });
   }
 };
@@ -142,11 +148,11 @@ export const getLocationsByTimeRange = async (req, res) => {
   try {
     const { userId } = req.params;
     const { startDate, endDate } = req.query;
-    
+
     if (!startDate || !endDate) {
       return res.status(400).json({
         success: false,
-        message: 'Start date and end date are required'
+        message: "Start date and end date are required",
       });
     }
 
@@ -155,10 +161,10 @@ export const getLocationsByTimeRange = async (req, res) => {
         userId,
         timestamp: {
           gte: new Date(startDate),
-          lte: new Date(endDate)
-        }
+          lte: new Date(endDate),
+        },
       },
-      orderBy: { timestamp: 'asc' }
+      orderBy: { timestamp: "asc" },
     });
 
     res.json({
@@ -167,15 +173,15 @@ export const getLocationsByTimeRange = async (req, res) => {
       meta: {
         startDate,
         endDate,
-        count: locations.length
-      }
+        count: locations.length,
+      },
     });
   } catch (error) {
-    console.error('Error fetching locations by time range:', error);
+    console.error("Error fetching locations by time range:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch locations by time range',
-      error: error.message
+      message: "Failed to fetch locations by time range",
+      error: error.message,
     });
   }
 };

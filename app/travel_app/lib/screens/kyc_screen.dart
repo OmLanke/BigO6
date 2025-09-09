@@ -14,7 +14,7 @@ class KycScreen extends StatefulWidget {
 class _KycScreenState extends State<KycScreen> with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  
+
   bool _isUploading = false;
   bool _isUploaded = false;
 
@@ -25,13 +25,9 @@ class _KycScreenState extends State<KycScreen> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
     _animationController.forward();
   }
 
@@ -60,7 +56,7 @@ class _KycScreenState extends State<KycScreen> with TickerProviderStateMixin {
     // Update provider with KYC completion
     if (mounted) {
       context.read<TouristProvider>().completeKyc();
-      
+
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -115,7 +111,9 @@ class _KycScreenState extends State<KycScreen> with TickerProviderStateMixin {
               Text(
                 'Upload your Aadhar card for identity verification',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.7),
                 ),
               ),
               const SizedBox(height: 32),
@@ -136,20 +134,23 @@ class _KycScreenState extends State<KycScreen> with TickerProviderStateMixin {
                           const SizedBox(width: 8),
                           Text(
                             'Instructions',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
-                      const Text('• Ensure your Aadhar card is clearly visible'),
+                      const Text(
+                        '• Ensure your Aadhar card is clearly visible',
+                      ),
                       const SizedBox(height: 4),
                       const Text('• Make sure all text is readable'),
                       const SizedBox(height: 4),
                       const Text('• Photo should be well-lit'),
                       const SizedBox(height: 4),
-                      const Text('• Personal details will be verified automatically'),
+                      const Text(
+                        '• Personal details will be verified automatically',
+                      ),
                     ],
                   ),
                 ),
@@ -169,7 +170,9 @@ class _KycScreenState extends State<KycScreen> with TickerProviderStateMixin {
                           height: 200,
                           decoration: BoxDecoration(
                             border: Border.all(
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withOpacity(0.3),
                               width: 2,
                               style: BorderStyle.solid,
                             ),
@@ -181,7 +184,9 @@ class _KycScreenState extends State<KycScreen> with TickerProviderStateMixin {
                               Icon(
                                 Icons.credit_card,
                                 size: 64,
-                                color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withOpacity(0.5),
                               ),
                               const SizedBox(height: 16),
                               Text(
@@ -191,9 +196,12 @@ class _KycScreenState extends State<KycScreen> with TickerProviderStateMixin {
                               const SizedBox(height: 8),
                               Text(
                                 'Tap to upload',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                                ),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface.withOpacity(0.6),
+                                    ),
                               ),
                             ],
                           ),
@@ -215,9 +223,12 @@ class _KycScreenState extends State<KycScreen> with TickerProviderStateMixin {
                         const SizedBox(height: 8),
                         Text(
                           'Please wait while we process your Aadhar card',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.7),
+                              ),
                           textAlign: TextAlign.center,
                         ),
                       ] else ...[
@@ -241,10 +252,11 @@ class _KycScreenState extends State<KycScreen> with TickerProviderStateMixin {
                               const SizedBox(height: 16),
                               Text(
                                 'KYC Verification Complete!',
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(
+                                      color: Colors.green,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 8),
@@ -266,14 +278,20 @@ class _KycScreenState extends State<KycScreen> with TickerProviderStateMixin {
                                   children: [
                                     Text(
                                       'Verified Details:',
-                                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                     ),
                                     const SizedBox(height: 8),
                                     _buildDetailRow('Name:', 'Pradyum Mistry'),
                                     _buildDetailRow('Address:', 'India'),
-                                    _buildDetailRow('Verification ID:', 'KYC_${DateTime.now().millisecondsSinceEpoch}'),
+                                    _buildDetailRow(
+                                      'Verification ID:',
+                                      'KYC_${DateTime.now().millisecondsSinceEpoch}',
+                                    ),
                                     _buildDetailRow('Status:', 'Verified ✓'),
                                   ],
                                 ),
@@ -310,9 +328,9 @@ class _KycScreenState extends State<KycScreen> with TickerProviderStateMixin {
           Expanded(
             child: Text(
               value,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500),
             ),
           ),
         ],

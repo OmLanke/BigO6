@@ -23,9 +23,7 @@ class ApiResponse<T> {
           ? fromJsonT(json['data'])
           : json['data'],
       message: json['message'],
-      errors: json['errors'] != null 
-          ? List<String>.from(json['errors'])
-          : null,
+      errors: json['errors'] != null ? List<String>.from(json['errors']) : null,
       meta: json['meta'],
     );
   }

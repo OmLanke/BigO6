@@ -1,4 +1,4 @@
-import { PrismaClient } from '../generated/prisma/index.js';
+import { PrismaClient } from "../generated/prisma/index.js";
 
 const prisma = new PrismaClient();
 
@@ -6,30 +6,30 @@ const prisma = new PrismaClient();
 export const getGeofences = async (req, res) => {
   try {
     const { type, isActive } = req.query;
-    
+
     const where = {};
     if (type) {
       where.type = type;
     }
     if (isActive !== undefined) {
-      where.isActive = isActive === 'true';
+      where.isActive = isActive === "true";
     }
 
     const geofences = await prisma.geofence.findMany({
       where,
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" },
     });
 
     res.json({
       success: true,
-      data: geofences
+      data: geofences,
     });
   } catch (error) {
-    console.error('Error fetching geofences:', error);
+    console.error("Error fetching geofences:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch geofences',
-      error: error.message
+      message: "Failed to fetch geofences",
+      error: error.message,
     });
   }
 };
@@ -38,28 +38,28 @@ export const getGeofences = async (req, res) => {
 export const getGeofenceById = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const geofence = await prisma.geofence.findUnique({
-      where: { id }
+      where: { id },
     });
 
     if (!geofence) {
       return res.status(404).json({
         success: false,
-        message: 'Geofence not found'
+        message: "Geofence not found",
       });
     }
 
     res.json({
       success: true,
-      data: geofence
+      data: geofence,
     });
   } catch (error) {
-    console.error('Error fetching geofence:', error);
+    console.error("Error fetching geofence:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch geofence',
-      error: error.message
+      message: "Failed to fetch geofence",
+      error: error.message,
     });
   }
 };
@@ -68,47 +68,56 @@ export const getGeofenceById = async (req, res) => {
 export const createGeofence = async (req, res) => {
   try {
     const geofenceData = req.body;
-    
+
     // Validate required fields
     if (!geofenceData.name || !geofenceData.coordinates || !geofenceData.type) {
       return res.status(400).json({
         success: false,
-        message: 'Name, coordinates, and type are required'
+        message: "Name, coordinates, and type are required",
       });
     }
 
     // Validate coordinates format
-    if (!Array.isArray(geofenceData.coordinates) || geofenceData.coordinates.length < 3) {
+    if (
+      !Array.isArray(geofenceData.coordinates) ||
+      geofenceData.coordinates.length < 3
+    ) {
       return res.status(400).json({
         success: false,
-        message: 'Coordinates must be an array with at least 3 points'
+        message: "Coordinates must be an array with at least 3 points",
       });
     }
 
     // Validate geofence type
-    const validTypes = ['safe_zone', 'danger_zone', 'restricted_area', 'tourist_zone', 'emergency_zone'];
+    const validTypes = [
+      "safe_zone",
+      "danger_zone",
+      "restricted_area",
+      "tourist_zone",
+      "emergency_zone",
+    ];
     if (!validTypes.includes(geofenceData.type)) {
       return res.status(400).json({
         success: false,
-        message: `Invalid type. Must be one of: ${validTypes.join(', ')}`
+        message: `Invalid type. Must be one of: ${validTypes.join(", ")}`,
       });
     }
 
     const geofence = await prisma.geofence.create({
-      data: geofenceData
+      data: geofenceData,
     });
 
     res.status(201).json({
       success: true,
       data: geofence,
-      message: 'Geofence created successfully'
+      message: "Geofence created successfully",
     });
   } catch (error) {
-    console.error('Error creating geofence:', error);
+    console.error("Error creating geofence:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to create geofence',
-      error: error.message
+      message: "Failed to create geofence",
+      error: error.message,
     });
   }
 };
@@ -121,28 +130,28 @@ export const updateGeofence = async (req, res) => {
 
     const geofence = await prisma.geofence.update({
       where: { id },
-      data: updateData
+      data: updateData,
     });
 
     res.json({
       success: true,
       data: geofence,
-      message: 'Geofence updated successfully'
+      message: "Geofence updated successfully",
     });
   } catch (error) {
-    console.error('Error updating geofence:', error);
-    
-    if (error.code === 'P2025') {
+    console.error("Error updating geofence:", error);
+
+    if (error.code === "P2025") {
       return res.status(404).json({
         success: false,
-        message: 'Geofence not found'
+        message: "Geofence not found",
       });
     }
 
     res.status(500).json({
       success: false,
-      message: 'Failed to update geofence',
-      error: error.message
+      message: "Failed to update geofence",
+      error: error.message,
     });
   }
 };
@@ -153,27 +162,27 @@ export const deleteGeofence = async (req, res) => {
     const { id } = req.params;
 
     await prisma.geofence.delete({
-      where: { id }
+      where: { id },
     });
 
     res.json({
       success: true,
-      message: 'Geofence deleted successfully'
+      message: "Geofence deleted successfully",
     });
   } catch (error) {
-    console.error('Error deleting geofence:', error);
-    
-    if (error.code === 'P2025') {
+    console.error("Error deleting geofence:", error);
+
+    if (error.code === "P2025") {
       return res.status(404).json({
         success: false,
-        message: 'Geofence not found'
+        message: "Geofence not found",
       });
     }
 
     res.status(500).json({
       success: false,
-      message: 'Failed to delete geofence',
-      error: error.message
+      message: "Failed to delete geofence",
+      error: error.message,
     });
   }
 };
@@ -182,11 +191,11 @@ export const deleteGeofence = async (req, res) => {
 export const checkPointInGeofences = async (req, res) => {
   try {
     const { latitude, longitude } = req.query;
-    
+
     if (!latitude || !longitude) {
       return res.status(400).json({
         success: false,
-        message: 'Latitude and longitude are required'
+        message: "Latitude and longitude are required",
       });
     }
 
@@ -195,7 +204,7 @@ export const checkPointInGeofences = async (req, res) => {
 
     // Get all active geofences
     const geofences = await prisma.geofence.findMany({
-      where: { isActive: true }
+      where: { isActive: true },
     });
 
     const intersectingGeofences = [];
@@ -213,15 +222,15 @@ export const checkPointInGeofences = async (req, res) => {
         point: { latitude: lat, longitude: lng },
         intersectingGeofences,
         totalIntersections: intersectingGeofences.length,
-        hasIntersections: intersectingGeofences.length > 0
-      }
+        hasIntersections: intersectingGeofences.length > 0,
+      },
     });
   } catch (error) {
-    console.error('Error checking point in geofences:', error);
+    console.error("Error checking point in geofences:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to check point in geofences',
-      error: error.message
+      message: "Failed to check point in geofences",
+      error: error.message,
     });
   }
 };
@@ -231,15 +240,15 @@ export const getGeofencesByType = async (req, res) => {
   try {
     const { type } = req.params;
     const { isActive } = req.query;
-    
+
     const where = { type };
     if (isActive !== undefined) {
-      where.isActive = isActive === 'true';
+      where.isActive = isActive === "true";
     }
 
     const geofences = await prisma.geofence.findMany({
       where,
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" },
     });
 
     res.json({
@@ -247,15 +256,15 @@ export const getGeofencesByType = async (req, res) => {
       data: geofences,
       meta: {
         type,
-        count: geofences.length
-      }
+        count: geofences.length,
+      },
     });
   } catch (error) {
-    console.error('Error fetching geofences by type:', error);
+    console.error("Error fetching geofences by type:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch geofences by type',
-      error: error.message
+      message: "Failed to fetch geofences by type",
+      error: error.message,
     });
   }
 };
@@ -264,28 +273,33 @@ export const getGeofencesByType = async (req, res) => {
 export const getGeofencesInArea = async (req, res) => {
   try {
     const { northLat, southLat, eastLng, westLng } = req.query;
-    
+
     if (!northLat || !southLat || !eastLng || !westLng) {
       return res.status(400).json({
         success: false,
-        message: 'Bounding box coordinates (northLat, southLat, eastLng, westLng) are required'
+        message:
+          "Bounding box coordinates (northLat, southLat, eastLng, westLng) are required",
       });
     }
 
     // Get all geofences (in a real app, you'd use spatial indexing)
     const geofences = await prisma.geofence.findMany({
-      where: { isActive: true }
+      where: { isActive: true },
     });
 
     // Filter geofences that intersect with the bounding box
-    const geofencesInArea = geofences.filter(geofence => {
+    const geofencesInArea = geofences.filter((geofence) => {
       const coords = geofence.coordinates;
-      
+
       // Check if any coordinate is within the bounding box
       for (const coord of coords) {
         const [lat, lng] = coord;
-        if (lat >= parseFloat(southLat) && lat <= parseFloat(northLat) &&
-            lng >= parseFloat(westLng) && lng <= parseFloat(eastLng)) {
+        if (
+          lat >= parseFloat(southLat) &&
+          lat <= parseFloat(northLat) &&
+          lng >= parseFloat(westLng) &&
+          lng <= parseFloat(eastLng)
+        ) {
           return true;
         }
       }
@@ -300,17 +314,17 @@ export const getGeofencesInArea = async (req, res) => {
           north: parseFloat(northLat),
           south: parseFloat(southLat),
           east: parseFloat(eastLng),
-          west: parseFloat(westLng)
+          west: parseFloat(westLng),
         },
-        count: geofencesInArea.length
-      }
+        count: geofencesInArea.length,
+      },
     });
   } catch (error) {
-    console.error('Error fetching geofences in area:', error);
+    console.error("Error fetching geofences in area:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch geofences in area',
-      error: error.message
+      message: "Failed to fetch geofences in area",
+      error: error.message,
     });
   }
 };
@@ -324,7 +338,7 @@ function isPointInPolygon(point, polygon) {
     const [xi, yi] = polygon[i];
     const [xj, yj] = polygon[j];
 
-    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
       inside = !inside;
     }
   }
@@ -338,37 +352,39 @@ export const toggleGeofenceStatus = async (req, res) => {
     const { id } = req.params;
     const { isActive } = req.body;
 
-    if (typeof isActive !== 'boolean') {
+    if (typeof isActive !== "boolean") {
       return res.status(400).json({
         success: false,
-        message: 'isActive must be a boolean value'
+        message: "isActive must be a boolean value",
       });
     }
 
     const geofence = await prisma.geofence.update({
       where: { id },
-      data: { isActive }
+      data: { isActive },
     });
 
     res.json({
       success: true,
       data: geofence,
-      message: `Geofence ${isActive ? 'activated' : 'deactivated'} successfully`
+      message: `Geofence ${
+        isActive ? "activated" : "deactivated"
+      } successfully`,
     });
   } catch (error) {
-    console.error('Error toggling geofence status:', error);
-    
-    if (error.code === 'P2025') {
+    console.error("Error toggling geofence status:", error);
+
+    if (error.code === "P2025") {
       return res.status(404).json({
         success: false,
-        message: 'Geofence not found'
+        message: "Geofence not found",
       });
     }
 
     res.status(500).json({
       success: false,
-      message: 'Failed to toggle geofence status',
-      error: error.message
+      message: "Failed to toggle geofence status",
+      error: error.message,
     });
   }
 };

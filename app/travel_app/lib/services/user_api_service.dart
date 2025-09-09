@@ -14,9 +14,8 @@ class UserApiService {
   Future<ApiResponse<List<TouristProfile>>> getUsers() async {
     return _apiService.get<List<TouristProfile>>(
       ApiConstants.users,
-      fromJson: (json) => (json as List)
-          .map((item) => TouristProfile.fromJson(item))
-          .toList(),
+      fromJson: (json) =>
+          (json as List).map((item) => TouristProfile.fromJson(item)).toList(),
     );
   }
 
@@ -29,7 +28,9 @@ class UserApiService {
   }
 
   // Create new user
-  Future<ApiResponse<TouristProfile>> createUser(Map<String, dynamic> userData) async {
+  Future<ApiResponse<TouristProfile>> createUser(
+    Map<String, dynamic> userData,
+  ) async {
     return _apiService.post<TouristProfile>(
       ApiConstants.users,
       body: userData,

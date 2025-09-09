@@ -1,4 +1,4 @@
-import { PrismaClient } from '../generated/prisma/index.js';
+import { PrismaClient } from "../generated/prisma/index.js";
 
 const prisma = new PrismaClient();
 
@@ -10,27 +10,27 @@ export const getUsers = async (req, res) => {
         trips: true,
         alerts: {
           where: { isResolved: false },
-          orderBy: { createdAt: 'desc' }
+          orderBy: { createdAt: "desc" },
         },
         _count: {
           select: {
             trips: true,
             alerts: true,
-            locations: true
-          }
-        }
-      }
+            locations: true,
+          },
+        },
+      },
     });
     res.json({
       success: true,
-      data: users
+      data: users,
     });
   } catch (error) {
-    console.error('Error fetching users:', error);
+    console.error("Error fetching users:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch users',
-      error: error.message
+      message: "Failed to fetch users",
+      error: error.message,
     });
   }
 };
@@ -43,38 +43,38 @@ export const getUserById = async (req, res) => {
       where: { id },
       include: {
         trips: {
-          orderBy: { createdAt: 'desc' }
+          orderBy: { createdAt: "desc" },
         },
         alerts: {
-          orderBy: { createdAt: 'desc' }
+          orderBy: { createdAt: "desc" },
         },
         locations: {
-          orderBy: { timestamp: 'desc' },
-          take: 10 // Last 10 locations
+          orderBy: { timestamp: "desc" },
+          take: 10, // Last 10 locations
         },
         safetyScores: {
-          orderBy: { createdAt: 'desc' }
-        }
-      }
+          orderBy: { createdAt: "desc" },
+        },
+      },
     });
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
     }
 
     res.json({
       success: true,
-      data: user
+      data: user,
     });
   } catch (error) {
-    console.error('Error fetching user:', error);
+    console.error("Error fetching user:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch user',
-      error: error.message
+      message: "Failed to fetch user",
+      error: error.message,
     });
   }
 };
@@ -83,39 +83,39 @@ export const getUserById = async (req, res) => {
 export const createUser = async (req, res) => {
   try {
     const userData = req.body;
-    
+
     // Validate required fields
     if (!userData.email && !userData.phoneNumber) {
       return res.status(400).json({
         success: false,
-        message: 'Either email or phone number is required'
+        message: "Either email or phone number is required",
       });
     }
 
     const user = await prisma.user.create({
-      data: userData
+      data: userData,
     });
 
     res.status(201).json({
       success: true,
       data: user,
-      message: 'User created successfully'
+      message: "User created successfully",
     });
   } catch (error) {
-    console.error('Error creating user:', error);
-    
+    console.error("Error creating user:", error);
+
     // Handle unique constraint violation
-    if (error.code === 'P2002') {
+    if (error.code === "P2002") {
       return res.status(400).json({
         success: false,
-        message: 'User with this email already exists'
+        message: "User with this email already exists",
       });
     }
 
     res.status(500).json({
       success: false,
-      message: 'Failed to create user',
-      error: error.message
+      message: "Failed to create user",
+      error: error.message,
     });
   }
 };
@@ -128,28 +128,28 @@ export const updateUser = async (req, res) => {
 
     const user = await prisma.user.update({
       where: { id },
-      data: updateData
+      data: updateData,
     });
 
     res.json({
       success: true,
       data: user,
-      message: 'User updated successfully'
+      message: "User updated successfully",
     });
   } catch (error) {
-    console.error('Error updating user:', error);
-    
-    if (error.code === 'P2025') {
+    console.error("Error updating user:", error);
+
+    if (error.code === "P2025") {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
     }
 
     res.status(500).json({
       success: false,
-      message: 'Failed to update user',
-      error: error.message
+      message: "Failed to update user",
+      error: error.message,
     });
   }
 };
@@ -160,27 +160,27 @@ export const deleteUser = async (req, res) => {
     const { id } = req.params;
 
     await prisma.user.delete({
-      where: { id }
+      where: { id },
     });
 
     res.json({
       success: true,
-      message: 'User deleted successfully'
+      message: "User deleted successfully",
     });
   } catch (error) {
-    console.error('Error deleting user:', error);
-    
-    if (error.code === 'P2025') {
+    console.error("Error deleting user:", error);
+
+    if (error.code === "P2025") {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
     }
 
     res.status(500).json({
       success: false,
-      message: 'Failed to delete user',
-      error: error.message
+      message: "Failed to delete user",
+      error: error.message,
     });
   }
 };
@@ -189,37 +189,37 @@ export const deleteUser = async (req, res) => {
 export const uploadAadharCard = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     // Mock file upload - in real implementation, you'd handle file upload here
     const mockAadharUrl = `https://kyc-storage.example.com/aadhar/${id}_${Date.now()}.jpg`;
-    
+
     const user = await prisma.user.update({
       where: { id },
       data: {
         aadharCardUrl: mockAadharUrl,
-        isKycVerified: true // Auto-verify for mock implementation
-      }
+        isKycVerified: true, // Auto-verify for mock implementation
+      },
     });
 
     res.json({
       success: true,
       data: user,
-      message: 'Aadhar card uploaded and KYC verified successfully'
+      message: "Aadhar card uploaded and KYC verified successfully",
     });
   } catch (error) {
-    console.error('Error uploading Aadhar card:', error);
-    
-    if (error.code === 'P2025') {
+    console.error("Error uploading Aadhar card:", error);
+
+    if (error.code === "P2025") {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
     }
 
     res.status(500).json({
       success: false,
-      message: 'Failed to upload Aadhar card',
-      error: error.message
+      message: "Failed to upload Aadhar card",
+      error: error.message,
     });
   }
 };
@@ -228,21 +228,21 @@ export const uploadAadharCard = async (req, res) => {
 export const getKycStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const user = await prisma.user.findUnique({
       where: { id },
       select: {
         id: true,
         name: true,
         isKycVerified: true,
-        aadharCardUrl: true
-      }
+        aadharCardUrl: true,
+      },
     });
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
     }
 
@@ -251,15 +251,15 @@ export const getKycStatus = async (req, res) => {
       data: {
         isKycVerified: user.isKycVerified,
         hasAadharCard: !!user.aadharCardUrl,
-        status: user.isKycVerified ? 'verified' : 'pending'
-      }
+        status: user.isKycVerified ? "verified" : "pending",
+      },
     });
   } catch (error) {
-    console.error('Error fetching KYC status:', error);
+    console.error("Error fetching KYC status:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch KYC status',
-      error: error.message
+      message: "Failed to fetch KYC status",
+      error: error.message,
     });
   }
 };

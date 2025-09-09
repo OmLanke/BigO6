@@ -27,7 +27,7 @@ class ApiService {
   }) async {
     try {
       final uri = _buildUri(endpoint, queryParams);
-      
+
       final response = await _client
           .get(uri, headers: ApiConstants.defaultHeaders)
           .timeout(ApiConstants.receiveTimeout);
@@ -46,7 +46,7 @@ class ApiService {
   }) async {
     try {
       final uri = _buildUri(endpoint);
-      
+
       final response = await _client
           .post(
             uri,
@@ -69,7 +69,7 @@ class ApiService {
   }) async {
     try {
       final uri = _buildUri(endpoint);
-      
+
       final response = await _client
           .put(
             uri,
@@ -91,7 +91,7 @@ class ApiService {
   }) async {
     try {
       final uri = _buildUri(endpoint);
-      
+
       final response = await _client
           .delete(uri, headers: ApiConstants.defaultHeaders)
           .timeout(ApiConstants.receiveTimeout);
@@ -110,7 +110,7 @@ class ApiService {
   }) async {
     try {
       final uri = _buildUri(endpoint);
-      
+
       final response = await _client
           .patch(
             uri,
@@ -129,11 +129,11 @@ class ApiService {
   Uri _buildUri(String endpoint, [Map<String, String>? queryParams]) {
     final url = '${ApiConstants.apiBaseUrl}$endpoint';
     final uri = Uri.parse(url);
-    
+
     if (queryParams != null && queryParams.isNotEmpty) {
       return uri.replace(queryParameters: queryParams);
     }
-    
+
     return uri;
   }
 
@@ -144,7 +144,7 @@ class ApiService {
   ) {
     try {
       final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
-      
+
       // Check if response indicates success
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return ApiResponse.fromJson(jsonResponse, fromJson);
@@ -169,7 +169,7 @@ class ApiService {
   // Handle errors
   ApiResponse<T> _handleError<T>(dynamic error) {
     String errorMessage = 'Unknown error occurred';
-    
+
     if (error is SocketException) {
       errorMessage = 'No internet connection';
     } else if (error is http.ClientException) {
@@ -179,7 +179,7 @@ class ApiService {
     } else {
       errorMessage = error.toString();
     }
-    
+
     return ApiResponse<T>(
       success: false,
       message: errorMessage,

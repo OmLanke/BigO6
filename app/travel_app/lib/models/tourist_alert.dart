@@ -183,7 +183,7 @@ class TouristAlert {
   factory TouristAlert.fromBackendJson(Map<String, dynamic> json) {
     AlertType alertType = AlertType.deviation;
     AlertPriority priority = AlertPriority.medium;
-    
+
     // Map backend alertType to our enum
     switch (json['alertType']?.toLowerCase()) {
       case 'sos':
@@ -206,7 +206,7 @@ class TouristAlert {
       default:
         alertType = AlertType.deviation;
     }
-    
+
     // Map backend severity to our priority
     switch (json['severity']?.toLowerCase()) {
       case 'critical':
@@ -222,7 +222,7 @@ class TouristAlert {
         priority = AlertPriority.low;
         break;
     }
-    
+
     return TouristAlert(
       id: json['id'],
       touristId: json['userId'], // Backend uses userId
@@ -232,16 +232,15 @@ class TouristAlert {
       message: json['message'],
       latitude: json['latitude']?.toDouble(),
       longitude: json['longitude']?.toDouble(),
-      timestamp: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
+      timestamp: DateTime.parse(
+        json['createdAt'] ?? DateTime.now().toIso8601String(),
+      ),
       isResolved: json['isResolved'] ?? false,
       resolvedBy: null,
       resolvedAt: json['updatedAt'] != null && json['isResolved'] == true
           ? DateTime.parse(json['updatedAt'])
           : null,
-      metadata: {
-        'location': json['location'],
-        'tripId': json['tripId'],
-      },
+      metadata: {'location': json['location'], 'tripId': json['tripId']},
     );
   }
 }

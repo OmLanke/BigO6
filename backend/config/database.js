@@ -34,7 +34,10 @@ const connectDB = async () => {
       process.exit(0);
     });
   } catch (error) {
-    console.warn("MongoDB connection failed (continuing without MongoDB):", error.message);
+    console.warn(
+      "MongoDB connection failed (continuing without MongoDB):",
+      error.message
+    );
     // Don't exit the process, let the app continue with Prisma
   }
 };

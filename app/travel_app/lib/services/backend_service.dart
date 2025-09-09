@@ -41,11 +41,11 @@ class BackendService {
       };
 
       final response = await HttpService.post('/users', userData);
-      
+
       if (response['success'] == true && response['data'] != null) {
         return TouristProfile.fromBackendJson(response['data']);
       }
-      
+
       return null;
     } catch (e) {
       if (kDebugMode) {
@@ -58,11 +58,11 @@ class BackendService {
   Future<TouristProfile?> getUserById(String userId) async {
     try {
       final response = await HttpService.get('/users/$userId');
-      
+
       if (response['success'] == true && response['data'] != null) {
         return TouristProfile.fromBackendJson(response['data']);
       }
-      
+
       return null;
     } catch (e) {
       if (kDebugMode) {
@@ -72,14 +72,17 @@ class BackendService {
     }
   }
 
-  Future<TouristProfile?> updateUser(String userId, Map<String, dynamic> updates) async {
+  Future<TouristProfile?> updateUser(
+    String userId,
+    Map<String, dynamic> updates,
+  ) async {
     try {
       final response = await HttpService.put('/users/$userId', updates);
-      
+
       if (response['success'] == true && response['data'] != null) {
         return TouristProfile.fromBackendJson(response['data']);
       }
-      
+
       return null;
     } catch (e) {
       if (kDebugMode) {
@@ -106,7 +109,7 @@ class BackendService {
         'aadharImage': base64Image,
         'timestamp': DateTime.now().toIso8601String(),
       });
-      
+
       return response['success'] == true;
     } catch (e) {
       if (kDebugMode) {
@@ -119,11 +122,11 @@ class BackendService {
   Future<Map<String, dynamic>?> getKycStatus(String userId) async {
     try {
       final response = await HttpService.get('/users/$userId/kyc/status');
-      
+
       if (response['success'] == true && response['data'] != null) {
         return response['data'];
       }
-      
+
       return null;
     } catch (e) {
       if (kDebugMode) {
@@ -150,11 +153,11 @@ class BackendService {
       };
 
       final response = await HttpService.post('/trips', tripData);
-      
+
       if (response['success'] == true && response['data'] != null) {
         return response['data']['id'];
       }
-      
+
       return null;
     } catch (e) {
       if (kDebugMode) {
@@ -169,7 +172,7 @@ class BackendService {
       final response = await HttpService.put('/trips/$tripId/status', {
         'status': status,
       });
-      
+
       return response['success'] == true;
     } catch (e) {
       if (kDebugMode) {
@@ -203,7 +206,7 @@ class BackendService {
       };
 
       final response = await HttpService.post('/alerts', alertData);
-      
+
       return response['success'] == true;
     } catch (e) {
       if (kDebugMode) {
@@ -216,13 +219,13 @@ class BackendService {
   Future<List<TouristAlert>> getUserAlerts(String userId) async {
     try {
       final response = await HttpService.get('/alerts/user/$userId');
-      
+
       if (response['success'] == true && response['data'] != null) {
         return (response['data'] as List)
             .map((item) => TouristAlert.fromBackendJson(item))
             .toList();
       }
-      
+
       return [];
     } catch (e) {
       if (kDebugMode) {
@@ -267,7 +270,7 @@ class BackendService {
       };
 
       final response = await HttpService.post('/locations', locationData);
-      
+
       return response['success'] == true;
     } catch (e) {
       if (kDebugMode) {
@@ -297,11 +300,11 @@ class BackendService {
           .join('&');
 
       final response = await HttpService.get('/safety?$query');
-      
+
       if (response['success'] == true && response['data'] != null) {
         return response['data'];
       }
-      
+
       return null;
     } catch (e) {
       if (kDebugMode) {
