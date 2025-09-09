@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Modern Color Palette
-  static const Color primaryBlue = Color(0xFF6366F1); // Indigo
-  static const Color primaryDark = Color(0xFF4F46E5);
+  // TourRaksha Brand Colors - Matching your reference design
+  static const Color primaryBlue = Color(0xFF1E40AF); // Professional blue
+  static const Color primaryDark = Color(0xFF1E3A8A); // Darker blue
+  static const Color lightBlue = Color(0xFF3B82F6); // Light blue
+  static const Color accentTeal = Color(0xFF0891B2); // Teal accent
   static const Color secondary = Color(0xFF10B981); // Emerald
   static const Color accent = Color(0xFFF59E0B); // Amber
   static const Color danger = Color(0xFFEF4444); // Red
@@ -18,12 +20,12 @@ class AppTheme {
   static const Color textSecondary = Color(0xFFCBD5E1); // Slate 300
   static const Color divider = Color(0xFF475569); // Slate 600
 
-  // Light Theme Colors
-  static const Color backgroundLight = Color(0xFFFAFAFA);
+  // Light Theme Colors - Professional white background
+  static const Color backgroundLight = Color(0xFFF8FAFC); // Slate 50
   static const Color surfaceLight = Color(0xFFFFFFFF);
-  static const Color cardLight = Color(0xFFF8F9FA);
-  static const Color textDark = Color(0xFF0F172A);
-  static const Color textGrayLight = Color(0xFF64748B);
+  static const Color cardLight = Color(0xFFF1F5F9); // Slate 100
+  static const Color textDark = Color(0xFF0F172A); // Slate 900
+  static const Color textGrayLight = Color(0xFF475569); // Slate 600
 
   static ThemeData get lightTheme => ThemeData(
     useMaterial3: true,

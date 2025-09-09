@@ -21,8 +21,8 @@ class TravelApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => TouristProvider()),
       ],
       child: MaterialApp.router(
-        title: 'Tourist Safety App',
-        theme: AppTheme.darkTheme,
+        title: 'TourRaksha - Tourist Safety App',
+        theme: AppTheme.lightTheme,
         routerConfig: AppRouter.router,
         debugShowCheckedModeBanner: false,
       ),
