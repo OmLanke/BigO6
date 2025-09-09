@@ -120,7 +120,10 @@ export default function PoliceLayout({ children }: { children: React.ReactNode }
             <SidebarMenuItem>
               <SidebarMenuButton className="px-5 py-3 text-base rounded-none hover:bg-zinc-50 hover:text-zinc-900 transition-colors">
                 <LogOut className="w-6 h-6" />
+                <Link href="/">
+                
                 <span>Logout</span>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
