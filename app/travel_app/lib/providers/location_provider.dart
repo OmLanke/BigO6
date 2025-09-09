@@ -85,7 +85,8 @@ class LocationProvider extends ChangeNotifier {
       // Check if location services are enabled first
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        _locationError = 'Location services are disabled. Please enable them in settings.';
+        _locationError =
+            'Location services are disabled. Please enable them in settings.';
         _hasLocationPermission = false;
         notifyListeners();
         return;
@@ -93,13 +94,14 @@ class LocationProvider extends ChangeNotifier {
 
       // Check location permission using Geolocator
       LocationPermission permission = await Geolocator.checkPermission();
-      
+
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
       }
-      
+
       if (permission == LocationPermission.deniedForever) {
-        _locationError = 'Location permissions are permanently denied. Please enable them in settings.';
+        _locationError =
+            'Location permissions are permanently denied. Please enable them in settings.';
         _hasLocationPermission = false;
       } else if (permission == LocationPermission.denied) {
         _locationError = 'Location permission denied.';
@@ -108,7 +110,7 @@ class LocationProvider extends ChangeNotifier {
         _hasLocationPermission = true;
         _locationError = null;
       }
-      
+
       notifyListeners();
     } catch (e) {
       _locationError = 'Failed to check permissions: $e';

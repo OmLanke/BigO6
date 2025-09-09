@@ -47,7 +47,7 @@ dependencies:
   # Location and Maps
   geolocator: ^12.0.0
   permission_handler: ^11.3.1
-  flutter_map: ^7.0.2
+  flutter_map: ^6.0.1
   latlong2: ^0.9.1
 
   # Local Storage
