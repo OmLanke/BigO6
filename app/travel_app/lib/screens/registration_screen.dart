@@ -145,21 +145,42 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         );
 
         if (profile != null) {
-          Provider.of<TouristProvider>(context, listen: false).setTourist(profile);
-          success = true;
+          // Use the existing registerTourist method instead of setTourist
+          try {
+            await context.read<TouristProvider>().registerTourist(
+              name: profile.name,
+              passportNumber: profile.passportNumber,
+              nationality: profile.nationality,
+              emergencyContact: profile.emergencyContact,
+              emergencyContactNumber: profile.emergencyContactNumber,
+              tripStartDate: DateTime.now(), // You might want to get this from form
+              tripEndDate: DateTime.now().add(const Duration(days: 30)), // You might want to get this from form
+              plannedLocations: [], // You might want to get this from form
+            );
+            success = true;
+          } catch (e) {
+            success = false;
+            print('Registration failed: $e');
+          }
         }
       } else {
         // Legacy registration without OTP
-        success = await context.read<TouristProvider>().registerTourist(
-          name: _nameController.text.trim(),
-          passportNumber: _passportController.text.trim(),
-          nationality: _nationalityController.text.trim(),
-          emergencyContact: _emergencyContactController.text.trim(),
-          emergencyContactNumber: _emergencyPhoneController.text.trim(),
-          tripStartDate: _tripStartDate,
-          tripEndDate: _tripEndDate,
-          plannedLocations: _plannedLocations,
-        );
+        try {
+          await context.read<TouristProvider>().registerTourist(
+            name: _nameController.text.trim(),
+            passportNumber: _passportController.text.trim(),
+            nationality: _nationalityController.text.trim(),
+            emergencyContact: _emergencyContactController.text.trim(),
+            emergencyContactNumber: _emergencyPhoneController.text.trim(),
+            tripStartDate: _tripStartDate,
+            tripEndDate: _tripEndDate,
+            plannedLocations: _plannedLocations,
+          );
+          success = true;
+        } catch (e) {
+          success = false;
+          print('Registration failed: $e');
+        }
       }
 
       if (mounted && success) {
