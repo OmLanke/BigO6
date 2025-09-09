@@ -1,5 +1,15 @@
 import dotenv from "dotenv";
-// Load environment variables from .env file
+// Load environment vari// API routes
+app.use("/api/users", userRoutes);
+app.use("/api/trips", tripRoutes);
+app.use("/api/alerts", alertRoutes);
+app.use("/api/locations", locationRoutes);
+app.use("/api/safety", safetyRoutes);
+app.use("/api/geofences", geofenceRoutes);
+app.use("/api/blockchain", blockchainRoutes);
+app.use("/api/digital-ids", digitalIDRoutes);
+app.use("/api/efir", efirRoutes);
+app.use("/api/feedback", feedbackRoutes);
 dotenv.config();
 
 import express from "express";
@@ -14,6 +24,9 @@ import locationRoutes from "./routes/locationRoutes.js";
 import safetyRoutes from "./routes/safetyRoutes.js";
 import geofenceRoutes from "./routes/geofenceRoutes.js";
 import blockchainRoutes from "./routes/blockchainRoutes.js";
+import digitalIDRoutes from "./routes/digitalIDRoutes.js";
+import efirRoutes from "./routes/efirRoutes.js";
+import feedbackRoutes from "./routes/feedbackRoutes.js";
 
 // Import middleware
 import {
@@ -56,6 +69,9 @@ app.use("/api/locations", locationRoutes);
 app.use("/api/safety", safetyRoutes);
 app.use("/api/geofences", geofenceRoutes);
 app.use("/api/blockchain", blockchainRoutes);
+app.use("/api/digital-ids", digitalIDRoutes);
+app.use("/api/efir", efirRoutes);
+app.use("/api/feedback", feedbackRoutes);
 
 // Legacy endpoints for backward compatibility
 app.get("/api/users", async (req, res) => {
@@ -155,6 +171,45 @@ app.get("/api/docs", (req, res) => {
           "PUT /api/geofences/:id": "Update geofence",
           "DELETE /api/geofences/:id": "Delete geofence",
           "PATCH /api/geofences/:id/toggle": "Toggle geofence status",
+        },
+      },
+      digitalIDs: {
+        description: "Digital ID management for tourists",
+        routes: {
+          "GET /api/digital-ids": "Get all digital IDs (admin)",
+          "GET /api/digital-ids/count": "Get count of digital IDs (dashboard)",
+          "GET /api/digital-ids/:id": "Get digital ID by ID",
+          "GET /api/digital-ids/user/:userId": "Get digital ID by user ID",
+          "POST /api/digital-ids": "Issue new digital ID",
+          "PATCH /api/digital-ids/:id": "Update digital ID status",
+          "DELETE /api/digital-ids/:id": "Revoke digital ID",
+        },
+      },
+      efir: {
+        description: "Electronic First Information Report management",
+        routes: {
+          "GET /api/efir": "Get all EFIRs (admin)",
+          "GET /api/efir/status/:status": "Get EFIRs by status",
+          "GET /api/efir/:id": "Get EFIR by ID",
+          "GET /api/efir/user/:userId": "Get EFIRs by user ID",
+          "GET /api/efir/alert/:alertId": "Get EFIR by alert ID",
+          "POST /api/efir": "Create new EFIR",
+          "POST /api/efir/from-alert/:alertId": "Create EFIR from alert",
+          "PATCH /api/efir/:id/status": "Update EFIR status",
+          "PUT /api/efir/:id": "Update EFIR details",
+          "DELETE /api/efir/:id": "Delete EFIR",
+        },
+      },
+      feedback: {
+        description: "Tourist feedback management",
+        routes: {
+          "GET /api/feedback": "Get all feedback entries",
+          "GET /api/feedback/stats": "Get feedback statistics (dashboard)",
+          "GET /api/feedback/category/:category": "Get feedback by category",
+          "GET /api/feedback/:id": "Get feedback by ID",
+          "GET /api/feedback/user/:userId": "Get feedback by user ID",
+          "POST /api/feedback": "Submit new feedback",
+          "DELETE /api/feedback/:id": "Delete feedback",
         },
       },
     },

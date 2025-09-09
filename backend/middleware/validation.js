@@ -260,3 +260,130 @@ export const validateUUID = (paramName) => {
     next();
   };
 };
+
+// Validation for Digital ID operations
+export const validateDigitalID = (req, res, next) => {
+  const { body } = req;
+  const errors = [];
+
+  if (req.method === "POST") {
+    // Required fields for digital ID creation
+    if (!body.userId) errors.push("User ID is required");
+
+    // Validate expiration date if provided
+    if (body.expiresAt) {
+      const expiresAt = new Date(body.expiresAt);
+      if (isNaN(expiresAt.getTime())) {
+        errors.push("Invalid expiration date format");
+      } else if (expiresAt <= new Date()) {
+        errors.push("Expiration date must be in the future");
+      }
+    }
+  }
+
+  if (req.method === "PATCH") {
+    // Validate status for updates
+    if (body.status) {
+      const validStatuses = ['active', 'expired', 'revoked'];
+      if (!validStatuses.includes(body.status)) {
+        errors.push("Invalid status. Must be one of: active, expired, revoked");
+      }
+    }
+
+    // Validate expiration date if provided
+    if (body.expiresAt) {
+      const expiresAt = new Date(body.expiresAt);
+      if (isNaN(expiresAt.getTime())) {
+        errors.push("Invalid expiration date format");
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Validation failed",
+      errors,
+    });
+  }
+
+  next();
+};
+
+// Validation for EFIR operations
+export const validateEFIR = (req, res, next) => {
+  const { body } = req;
+  const errors = [];
+
+  if (req.method === "POST") {
+    // Required fields for EFIR creation
+    if (!body.userId) errors.push("User ID is required");
+    if (!body.reportType) errors.push("Report type is required");
+    if (!body.description) errors.push("Description is required");
+    if (!body.filedBy) errors.push("Filed by is required");
+
+    // Validate location data if provided
+    if (body.latitude && (typeof body.latitude !== 'number' || body.latitude < -90 || body.latitude > 90)) {
+      errors.push("Invalid latitude value. Must be between -90 and 90");
+    }
+
+    if (body.longitude && (typeof body.longitude !== 'number' || body.longitude < -180 || body.longitude > 180)) {
+      errors.push("Invalid longitude value. Must be between -180 and 180");
+    }
+  }
+
+  if (req.method === "PATCH" && req.path.includes('/status')) {
+    // Validate status updates
+    if (!body.status) {
+      errors.push("Status is required");
+    } else {
+      const validStatuses = ['pending', 'investigating', 'resolved', 'closed'];
+      if (!validStatuses.includes(body.status)) {
+        errors.push("Invalid status. Must be one of: pending, investigating, resolved, closed");
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Validation failed",
+      errors,
+    });
+  }
+
+  next();
+};
+
+// Validation for Feedback operations
+export const validateFeedback = (req, res, next) => {
+  const { body } = req;
+  const errors = [];
+
+  if (req.method === "POST") {
+    // Required fields for feedback creation
+    if (!body.userId) errors.push("User ID is required");
+    if (!body.rating) errors.push("Rating is required");
+    if (!body.category) errors.push("Category is required");
+
+    // Validate rating
+    if (body.rating && (typeof body.rating !== 'number' || body.rating < 1 || body.rating > 5)) {
+      errors.push("Invalid rating value. Must be between 1 and 5");
+    }
+
+    // Validate comment length if provided
+    if (body.comment && body.comment.length > 1000) {
+      errors.push("Comment is too long. Maximum 1000 characters allowed");
+    }
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Validation failed",
+      errors,
+    });
+  }
+
+  next();
+};

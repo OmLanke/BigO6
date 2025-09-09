@@ -46,6 +46,9 @@ model User {
   alerts            TouristAlert[]
   locations         LocationData[]
   safetyScores      SafetyScore[]
+  digitalID         DigitalID?
+  efirs             EFIR[]
+  feedback          Feedback[]
 }
 
 model Trip {
@@ -84,6 +87,8 @@ model TouristAlert {
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  
+  efir        EFIR?
 }
 
 model LocationData {
@@ -134,4 +139,41 @@ model Geofence {
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model DigitalID {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  idNumber    String   @unique
+  issuedAt    DateTime @default(now())
+  expiresAt   DateTime?
+  status      String   @default("active") // active, expired, revoked
+}
+
+model EFIR {
+  id          String   @id @default(uuid())
+  alertId     String?  @unique
+  alert       TouristAlert? @relation(fields: [alertId], references: [id], onDelete: SetNull)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reportType  String   // theft, assault, harassment, medical, etc.
+  description String
+  location    String?
+  latitude    Float?
+  longitude   Float?
+  filedBy     String   // could be "tourist", "police", "admin", etc.
+  status      String   @default("pending") // pending, investigating, resolved, closed
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Feedback {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating      Int      // 1-5 stars
+  category    String   // app, service, safety, location, etc.
+  comment     String?
+  createdAt   DateTime @default(now())
 }
