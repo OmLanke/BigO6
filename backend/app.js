@@ -9,6 +9,7 @@ import alertRoutes from "./routes/alertRoutes.js";
 import locationRoutes from "./routes/locationRoutes.js";
 import safetyRoutes from "./routes/safetyRoutes.js";
 import geofenceRoutes from "./routes/geofenceRoutes.js";
+import blockchainRoutes from "./routes/blockchainRoutes.js";
 
 // Import middleware
 import {
@@ -50,6 +51,7 @@ app.use("/api/alerts", alertRoutes);
 app.use("/api/locations", locationRoutes);
 app.use("/api/safety", safetyRoutes);
 app.use("/api/geofences", geofenceRoutes);
+app.use("/api/blockchain", blockchainRoutes);
 
 // Legacy endpoints for backward compatibility
 app.get("/api/users", async (req, res) => {
