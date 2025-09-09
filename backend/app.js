@@ -1,6 +1,9 @@
 import express from "express";
 import cors from "cors";
 import connectDB from "./config/database.js";
+import { PrismaClient } from './generated/prisma/index.js';
+
+const prisma = new PrismaClient();
 
 // Connect to MongoDB
 connectDB();
@@ -18,6 +21,28 @@ app.get("/api/health", (_req, res) => {
     message: "MERN Template Backend is running!",
     timestamp: new Date().toISOString(),
   });
+});
+
+// GET all users
+app.get('/api/users', async (req, res) => {
+  try {
+    const users = await prisma.user.findMany();
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// POST new user
+app.post('/api/users', async (req, res) => {
+  try {
+    const user = await prisma.user.create({
+      data: req.body
+    });
+    res.status(201).json(user);
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to create user' });
+  }
 });
 
 app.listen(PORT, () => {
