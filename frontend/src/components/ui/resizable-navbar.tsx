@@ -72,7 +72,7 @@ export const Navbar = ({ children, className }: NavbarProps) => {
     <motion.div
       ref={ref}
       // IMPORTANT: Change this to class of `fixed` if you want the navbar to be fixed
-      className={cn("sticky inset-x-0 top-20 z-40 w-full", className)}
+      className={cn(" sticky inset-x-0 top-20 z-40 w-full", className)}
     >
       {React.Children.map(children, (child) =>
         React.isValidElement(child)
@@ -131,7 +131,7 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
         <a
           onMouseEnter={() => setHovered(idx)}
           onClick={onItemClick}
-          className="relative px-4 py-2 text-neutral-600 dark:text-neutral-300"
+          className="relative px-4 py-2 text-black font-medium dark:text-neutral-300"
           key={`link-${idx}`}
           href={item.link}
         >
@@ -243,10 +243,10 @@ export const NavbarLogo = () => {
       
         src={TourRakshaLogo}
         alt="logo"
-        width={30}
-        height={30}
+        width={40}
+        height={40}
       />
-      <span className="font-medium text-black dark:text-white">Tourरक्षा</span>
+      <span className="font-semibold text-xl text-black dark:text-white">Tourरक्षा</span>
     </a>
   );
 };
