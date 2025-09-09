@@ -6,6 +6,9 @@ import {
   updateTrip,
   deleteTrip,
   updateTripStatus,
+  registerTripOnBlockchain,
+  verifyTripOnBlockchain,
+  getTripBlockchainData,
 } from "../controllers/tripController.js";
 
 const router = express.Router();
@@ -19,5 +22,10 @@ router.delete("/:id", deleteTrip);
 
 // Trip status management
 router.patch("/:id/status", updateTripStatus);
+
+// Blockchain operations
+router.post("/:id/blockchain/register", registerTripOnBlockchain);
+router.post("/:id/blockchain/verify", verifyTripOnBlockchain);
+router.get("/:id/blockchain", getTripBlockchainData);
 
 export default router;

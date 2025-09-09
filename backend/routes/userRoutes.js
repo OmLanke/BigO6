@@ -7,6 +7,9 @@ import {
   deleteUser,
   uploadAadharCard,
   getKycStatus,
+  registerUserOnBlockchain,
+  getUserBlockchainData,
+  getBlockchainStats,
 } from "../controllers/userController.js";
 
 const router = express.Router();
@@ -21,5 +24,10 @@ router.delete("/:id", deleteUser);
 // KYC operations
 router.post("/:id/kyc/aadhar", uploadAadharCard);
 router.get("/:id/kyc/status", getKycStatus);
+
+// Blockchain operations
+router.post("/:id/blockchain/register", registerUserOnBlockchain);
+router.get("/:id/blockchain", getUserBlockchainData);
+router.get("/blockchain/stats", getBlockchainStats);
 
 export default router;

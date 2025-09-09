@@ -1,4 +1,5 @@
 import { PrismaClient } from "../generated/prisma/index.js";
+import blockchainService from "../services/blockchainService.js";
 
 const prisma = new PrismaClient();
 
@@ -65,9 +66,15 @@ export const getUserById = async (req, res) => {
       });
     }
 
+    // Get blockchain data if available
+    const blockchainData = await blockchainService.getTouristBlockchainData(user.id);
+
     res.json({
       success: true,
-      data: user,
+      data: {
+        ...user,
+        blockchain: blockchainData
+      },
     });
   } catch (error) {
     console.error("Error fetching user:", error);
@@ -96,9 +103,30 @@ export const createUser = async (req, res) => {
       data: userData,
     });
 
+    // Try to register on blockchain (don't fail if blockchain is unavailable)
+    let blockchainData = null;
+    try {
+      if (blockchainService.isBlockchainEnabled()) {
+        const blockchainResult = await blockchainService.registerTourist(user.id);
+        blockchainData = blockchainResult;
+        
+        // Update user with blockchain verification status
+        if (blockchainResult.blockchainTouristId) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { isKycVerified: true }
+          });
+        }
+      }
+    } catch (blockchainError) {
+      console.error('Blockchain registration failed:', blockchainError.message);
+      // Continue without blockchain - don't fail user creation
+    }
+
     res.status(201).json({
       success: true,
       data: user,
+      blockchain: blockchainData,
       message: "User created successfully",
     });
   } catch (error) {
@@ -259,6 +287,116 @@ export const getKycStatus = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to fetch KYC status",
+      error: error.message,
+    });
+  }
+};
+
+// Register user on blockchain
+export const registerUserOnBlockchain = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Get user from database
+    const user = await prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Register on blockchain
+    const result = await blockchainService.registerTourist(
+      user.name,
+      user.email,
+      user.id
+    );
+
+    // Update user with blockchain ID
+    await prisma.user.update({
+      where: { id },
+      data: {
+        blockchainId: result.touristId.toString(),
+      },
+    });
+
+    res.json({
+      success: true,
+      message: "User registered on blockchain successfully",
+      data: {
+        touristId: result.touristId.toString(),
+        transactionHash: result.transactionHash,
+      },
+    });
+  } catch (error) {
+    console.error("Error registering user on blockchain:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to register user on blockchain",
+      error: error.message,
+    });
+  }
+};
+
+// Get user's blockchain data
+export const getUserBlockchainData = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (!user.blockchainId) {
+      return res.status(404).json({
+        success: false,
+        message: "User not registered on blockchain",
+      });
+    }
+
+    const blockchainData = await blockchainService.getTouristBlockchainData(
+      user.blockchainId
+    );
+
+    res.json({
+      success: true,
+      data: blockchainData,
+    });
+  } catch (error) {
+    console.error("Error fetching blockchain data:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch blockchain data",
+      error: error.message,
+    });
+  }
+};
+
+// Get blockchain statistics
+export const getBlockchainStats = async (req, res) => {
+  try {
+    const stats = await blockchainService.getBlockchainStats();
+
+    res.json({
+      success: true,
+      data: stats,
+    });
+  } catch (error) {
+    console.error("Error fetching blockchain stats:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch blockchain statistics",
       error: error.message,
     });
   }

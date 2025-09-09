@@ -1,4 +1,5 @@
 import { PrismaClient } from "../generated/prisma/index.js";
+import blockchainService from "../services/blockchainService.js";
 
 const prisma = new PrismaClient();
 
@@ -27,9 +28,13 @@ export const getUserTrips = async (req, res) => {
       orderBy: { createdAt: "desc" },
     });
 
+    // Get blockchain verification data
+    const blockchainData = await blockchainService.getTouristBlockchainData(userId);
+
     res.json({
       success: true,
       data: trips,
+      blockchain: blockchainData,
     });
   } catch (error) {
     console.error("Error fetching trips:", error);
@@ -130,9 +135,36 @@ export const createTrip = async (req, res) => {
       },
     });
 
+    // Try to register trip on blockchain
+    let blockchainData = null;
+    try {
+      if (blockchainService.isBlockchainEnabled()) {
+        // Create itinerary object with trip details
+        const itinerary = {
+          destination: tripData.destination,
+          currentLocation: tripData.currentLocation,
+          status: tripData.status || 'planned',
+          createdAt: trip.createdAt,
+          itinerary: tripData.itinerary || []
+        };
+
+        const blockchainResult = await blockchainService.registerTrip(
+          trip.userId,
+          trip.tripStartDate,
+          trip.tripEndDate,
+          itinerary
+        );
+        blockchainData = blockchainResult;
+      }
+    } catch (blockchainError) {
+      console.error('Blockchain trip registration failed:', blockchainError.message);
+      // Continue without blockchain - don't fail trip creation
+    }
+
     res.status(201).json({
       success: true,
       data: trip,
+      blockchain: blockchainData,
       message: "Trip created successfully",
     });
   } catch (error) {
@@ -264,6 +296,157 @@ export const updateTripStatus = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to update trip status",
+      error: error.message,
+    });
+  }
+};
+
+// Register trip on blockchain
+export const registerTripOnBlockchain = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const trip = await prisma.trip.findUnique({
+      where: { id },
+      include: {
+        user: true,
+      },
+    });
+
+    if (!trip) {
+      return res.status(404).json({
+        success: false,
+        message: "Trip not found",
+      });
+    }
+
+    if (!trip.user.blockchainId) {
+      return res.status(400).json({
+        success: false,
+        message: "User must be registered on blockchain first",
+      });
+    }
+
+    // Create itinerary object
+    const itinerary = {
+      destination: trip.destination,
+      currentLocation: trip.currentLocation,
+      status: trip.status,
+      createdAt: trip.createdAt,
+      itinerary: trip.itinerary || []
+    };
+
+    const result = await blockchainService.registerTrip(
+      trip.user.blockchainId,
+      JSON.stringify(itinerary)
+    );
+
+    // Update trip with blockchain ID
+    await prisma.trip.update({
+      where: { id },
+      data: {
+        blockchainId: result.tripId.toString(),
+      },
+    });
+
+    res.json({
+      success: true,
+      message: "Trip registered on blockchain successfully",
+      data: {
+        tripId: result.tripId.toString(),
+        transactionHash: result.transactionHash,
+      },
+    });
+  } catch (error) {
+    console.error("Error registering trip on blockchain:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to register trip on blockchain",
+      error: error.message,
+    });
+  }
+};
+
+// Verify trip on blockchain
+export const verifyTripOnBlockchain = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const trip = await prisma.trip.findUnique({
+      where: { id },
+    });
+
+    if (!trip) {
+      return res.status(404).json({
+        success: false,
+        message: "Trip not found",
+      });
+    }
+
+    if (!trip.blockchainId) {
+      return res.status(404).json({
+        success: false,
+        message: "Trip not registered on blockchain",
+      });
+    }
+
+    const verificationResult = await blockchainService.verifyTrip(
+      trip.blockchainId
+    );
+
+    res.json({
+      success: true,
+      data: verificationResult,
+    });
+  } catch (error) {
+    console.error("Error verifying trip on blockchain:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to verify trip on blockchain",
+      error: error.message,
+    });
+  }
+};
+
+// Get trip's blockchain data
+export const getTripBlockchainData = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const trip = await prisma.trip.findUnique({
+      where: { id },
+      include: {
+        user: true,
+      },
+    });
+
+    if (!trip) {
+      return res.status(404).json({
+        success: false,
+        message: "Trip not found",
+      });
+    }
+
+    if (!trip.blockchainId) {
+      return res.status(404).json({
+        success: false,
+        message: "Trip not registered on blockchain",
+      });
+    }
+
+    const blockchainData = await blockchainService.getTripBlockchainData(
+      trip.blockchainId
+    );
+
+    res.json({
+      success: true,
+      data: blockchainData,
+    });
+  } catch (error) {
+    console.error("Error fetching trip blockchain data:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch trip blockchain data",
       error: error.message,
     });
   }
