@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KSP Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/javascript-debounce@1.0.1/dist/javascript-debounce.min.js'></script>
+    <script src='https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.25.1/maps/maps-web.min.js'></script>
+    <script src='https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.25.1/services/services-web.min.js'></script>
+    <script type='text/javascript' src='js/mobile-or-tablet.js'></script>
+    <script type='text/javascript' src='js/formatters.js'></script>
+    <script type='text/javascript' src='js/dom-helpers.js'></script>
+    <script type='text/javascript' src='js/side-panel.js'></script>
+    <script type='text/javascript' src='js/incidents-details-manager.js'></script>
+    <script type='text/javascript' src='js/incident-marker.js'></script>
+    <link rel='stylesheet' type='text/css' href='css/index.css' />
+    <link rel='stylesheet' type='text/css' href='css/poi.css' />
+    <link rel='stylesheet' type='text/css' href='css/traffic-incidents.css' />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.25.0/maps/maps.css" />
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<main>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary" data-bs-theme="dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="https://github.com/altf4-games/KSP-DA-Dashboard">>_ Alt F4</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/accident-detection/">Accident Detection</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/insights/">Trends & Graphs</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about-us/">About Us</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div>
+        <div class='map-view'>
+            <div class='tt-side-panel'>
+                <header class='tt-side-panel__header -traffic'></header>
+                <div class='tt-overflow'>
+                    <div class='js-results'></div>
+                </div>
+            </div>
+            <div id='map' class='full-map map'></div>
+        </div>
+        <div class="side-panel">
+            <div class="card text-bg-dark">
+                <div class="location-dropdown">
+                    <button class="btn btn-secondary dropdown-toggle loc-btn" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        Select Location
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                        <li><button class="dropdown-item" onclick="setLocation(12.9999,77.5946,'Bengaluru')">Bengaluru</button></li>
+                        <li><button class="dropdown-item" onclick="setLocation(12.9141,74.8560,'Mangaluru')">Mangaluru</button></li>
+                        <li><button class="dropdown-item" onclick="setLocation(13.3409,74.7421,'Udipi')">Udupi</button></li>
+                    </ul>
+                </div>
+                <div class="filter-dropdown mt-1">
+                    <button class="btn btn-secondary dropdown-toggle zon-btn" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        Select Zone
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton2">
+                        <li><button class="dropdown-item" onClick='SwitchZones("blackspots");'>Black Spots</button></li>
+                        <li><button class="dropdown-item" onClick='SwitchZones("grayspots");'>Gray Spots</button></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card mb-2 mt-2 text-bg-dark">
+                <h4 class="gpt-insights-header text-center" data-bs-theme="dark">✨INSIGHTS</h4>
+                <p class="">Select any marker then click on the button below</p>
+                <button class="btn btn-primary mb-3 in-btn" onclick="getInsights()" disabled>Get Insights</button>
+                <div class="gpt-insights-response bg-dark" id="gpt-response">
+                    <div class="card mb-2 text-bg-dark">
+                        <div class="card-body">
+                            <h5 class="card-title">Infrastructure Improvements</h5>
+                            <p class="card-text ii-text">~</p>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">Traffic Deployment Suggestions</h5>
+                            <p class="card-text td-text">~</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+<script src="index.js"></script>
+</body>
+</html>
