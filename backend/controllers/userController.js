@@ -190,6 +190,7 @@ export const deleteUser = async (req, res) => {
 export const sendEmailOTP = async (req, res) => {
   try {
     const { email } = req.body;
+    console.log(email)
 
     if (!email) {
       return res.status(400).json({

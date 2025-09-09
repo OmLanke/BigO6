@@ -1,6 +1,6 @@
 class ApiConstants {
   // Backend URL - Change this to your deployed backend URL when ready
-  static const String baseUrl = 'http://localhost:5000';
+  static const String baseUrl = 'http://localhost:3000';
   static const String apiVersion = 'v1';
   static const String apiPrefix = '/api';
 

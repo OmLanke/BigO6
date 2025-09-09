@@ -399,7 +399,7 @@
     </div>
 
     <script>
-        const API_BASE_URL = 'http://localhost:5000';
+        const API_BASE_URL = 'http://localhost:3000';
 
         // Check API status on load
         window.onload = function() {
@@ -426,7 +426,7 @@
             } catch (error) {
                 const statusDiv = document.getElementById('api-status');
                 statusDiv.className = 'api-status error';
-                statusDiv.innerHTML = '❌ Cannot connect to API. Make sure the server is running on port 5000.';
+                statusDiv.innerHTML = '❌ Cannot connect to API. Make sure the server is running on port 3000.';
                 
                 document.getElementById('apiTest').innerHTML = `
                     <div class="error">Error: ${error.message}</div>
