@@ -5,9 +5,18 @@ import 'package:go_router/go_router.dart';
 import '../providers/tourist_provider.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
+import '../services/auth_service.dart';
+import '../utils/validation_utils.dart';
 
 class RegistrationScreen extends StatefulWidget {
-  const RegistrationScreen({super.key});
+  final String? userId;  // Provided after OTP verification
+  final String? email;   // Pre-filled email from OTP verification
+
+  const RegistrationScreen({
+    super.key, 
+    this.userId,
+    this.email,
+  });
 
   @override
   State<RegistrationScreen> createState() => _RegistrationScreenState();
@@ -16,18 +25,36 @@ class RegistrationScreen extends StatefulWidget {
 class _RegistrationScreenState extends State<RegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passportController = TextEditingController();
   final _nationalityController = TextEditingController();
   final _emergencyContactController = TextEditingController();
   final _emergencyPhoneController = TextEditingController();
+  final _addressController = TextEditingController();
+  
+  String? _gender;
+  String? _bloodGroup;
+  DateTime? _dateOfBirth;
 
   DateTime _tripStartDate = DateTime.now();
   DateTime _tripEndDate = DateTime.now().add(const Duration(days: 7));
 
   final List<String> _plannedLocations = [];
   final _locationController = TextEditingController();
-
+  
+  final _authService = AuthService();
   bool _isLoading = false;
+  String? _errorMessage;
+  
+  @override
+  void initState() {
+    super.initState();
+    // Pre-fill email if provided from OTP flow
+    if (widget.email != null) {
+      _emailController.text = widget.email!;
+    }
+  }
 
   @override
   void dispose() {
@@ -99,23 +126,50 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     });
 
     try {
-      await context.read<TouristProvider>().registerTourist(
-        name: _nameController.text.trim(),
-        passportNumber: _passportController.text.trim(),
-        nationality: _nationalityController.text.trim(),
-        emergencyContact: _emergencyContactController.text.trim(),
-        emergencyContactNumber: _emergencyPhoneController.text.trim(),
-        tripStartDate: _tripStartDate,
-        tripEndDate: _tripEndDate,
-        plannedLocations: _plannedLocations,
-      );
+      bool success = false;
+      
+      if (widget.userId != null) {
+        // Complete registration after OTP verification
+        final profile = await _authService.completeRegistration(
+          userId: widget.userId!,
+          name: _nameController.text.trim(),
+          phoneNumber: _phoneController.text.trim(),
+          nationality: _nationalityController.text.trim(),
+          passportNumber: _passportController.text.trim(),
+          emergencyContact: _emergencyContactController.text.trim(),
+          emergencyContactNumber: _emergencyPhoneController.text.trim(),
+          dateOfBirth: _dateOfBirth,
+          address: _addressController.text,
+          gender: _gender,
+          bloodGroup: _bloodGroup,
+        );
 
-      if (mounted) {
+        if (profile != null) {
+          Provider.of<TouristProvider>(context, listen: false).setTourist(profile);
+          success = true;
+        }
+      } else {
+        // Legacy registration without OTP
+        success = await context.read<TouristProvider>().registerTourist(
+          name: _nameController.text.trim(),
+          passportNumber: _passportController.text.trim(),
+          nationality: _nationalityController.text.trim(),
+          emergencyContact: _emergencyContactController.text.trim(),
+          emergencyContactNumber: _emergencyPhoneController.text.trim(),
+          tripStartDate: _tripStartDate,
+          tripEndDate: _tripEndDate,
+          plannedLocations: _plannedLocations,
+        );
+      }
+
+      if (mounted && success) {
         _showSnackBar(
           'Registration successful! Digital ID created.',
           isSuccess: true,
         );
         context.go('/home');
+      } else {
+        _showSnackBar('Registration failed. Please try again.');
       }
     } catch (e) {
       _showSnackBar('Registration failed: $e');

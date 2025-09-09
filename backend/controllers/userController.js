@@ -1,4 +1,5 @@
 import { PrismaClient } from "../generated/prisma/index.js";
+import { generateOTP, storeOTP, verifyOTP, sendOTPEmail } from "../utils/emailService.js";
 
 const prisma = new PrismaClient();
 
@@ -181,6 +182,149 @@ export const deleteUser = async (req, res) => {
       success: false,
       message: "Failed to delete user",
       error: error.message,
+    });
+  }
+};
+
+// Send OTP for email verification
+export const sendEmailOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required"
+      });
+    }
+
+    // Check if email is valid
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email format"
+      });
+    }
+
+    // Check if user already exists with this email
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User with this email already exists"
+      });
+    }
+
+    // Generate and store OTP
+    const otp = generateOTP();
+    storeOTP(email, otp);
+
+    // Send OTP via email
+    await sendOTPEmail(email, otp);
+
+    res.json({
+      success: true,
+      message: "OTP sent to email successfully"
+    });
+  } catch (error) {
+    console.error("Error sending email OTP:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to send OTP",
+      error: error.message
+    });
+  }
+};
+
+// Verify OTP and create initial user
+export const verifyEmailOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and OTP are required"
+      });
+    }
+
+    // Verify the OTP
+    const verification = verifyOTP(email, otp);
+
+    if (!verification.valid) {
+      return res.status(400).json({
+        success: false,
+        message: verification.message
+      });
+    }
+
+    // Create a minimal user with just the email
+    const user = await prisma.user.create({
+      data: { email }
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Email verified successfully",
+      data: { userId: user.id, email: user.email }
+    });
+  } catch (error) {
+    console.error("Error verifying email OTP:", error);
+
+    // Handle unique constraint violation
+    if (error.code === "P2002") {
+      return res.status(400).json({
+        success: false,
+        message: "User with this email already exists"
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to verify email",
+      error: error.message
+    });
+  }
+};
+
+// Complete user registration
+export const completeUserRegistration = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userData = req.body;
+
+    // Remove email from userData as we don't want to update the email
+    const { email, ...updateData } = userData;
+
+    // Update the user with the additional information
+    const user = await prisma.user.update({
+      where: { id },
+      data: updateData
+    });
+
+    res.json({
+      success: true,
+      message: "User registration completed successfully",
+      data: user
+    });
+  } catch (error) {
+    console.error("Error completing user registration:", error);
+
+    if (error.code === "P2025") {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to complete registration",
+      error: error.message
     });
   }
 };

@@ -7,9 +7,17 @@ import {
   deleteUser,
   uploadAadharCard,
   getKycStatus,
+  sendEmailOTP,
+  verifyEmailOTP,
+  completeUserRegistration,
 } from "../controllers/userController.js";
 
 const router = express.Router();
+
+// Email verification and user registration flow
+router.post("/auth/send-otp", sendEmailOTP);
+router.post("/auth/verify-otp", verifyEmailOTP);
+router.post("/:id/complete-registration", completeUserRegistration);
 
 // User CRUD operations
 router.get("/", getUsers);

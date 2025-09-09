@@ -1,3 +1,7 @@
+import dotenv from "dotenv";
+// Load environment variables from .env file
+dotenv.config();
+
 import express from "express";
 import cors from "cors";
 import { PrismaClient } from "./generated/prisma/index.js";
