@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/tourist_profile.dart';
 import '../models/tourist_alert.dart';
+import '../services/backend_service.dart';
 
 class TouristProvider extends ChangeNotifier {
   TouristProfile? _currentProfile;
@@ -183,11 +184,11 @@ class TouristProvider extends ChangeNotifier {
     _digitalId = 'DTI_DEMO_123456789';
     _currentProfile = TouristProfile(
       id: _digitalId!,
-      name: 'John Doe',
-      passportNumber: 'A12345678',
-      nationality: 'United States',
-      emergencyContact: 'Jane Doe',
-      emergencyContactNumber: '+1-555-0123',
+      name: 'Pradyum Mistry',
+      passportNumber: 'M12345678',
+      nationality: 'India',
+      emergencyContact: 'Emergency Contact',
+      emergencyContactNumber: '+91-98765-43210',
       tripStartDate: DateTime.now().subtract(const Duration(days: 1)),
       tripEndDate: DateTime.now().add(const Duration(days: 6)),
       plannedLocations: [
@@ -195,6 +196,8 @@ class TouristProvider extends ChangeNotifier {
         'India Gate, Delhi',
         'Qutub Minar, Delhi',
         'Lotus Temple, Delhi',
+        'Taj Mahal, Agra',
+        'Gateway of India, Mumbai',
       ],
       profileImageUrl: '',
     );
@@ -219,6 +222,15 @@ class TouristProvider extends ChangeNotifier {
     ]);
 
     notifyListeners();
+  }
+
+  void completeKyc() {
+    // In demo mode, just update the profile to show KYC is completed
+    if (_currentProfile != null) {
+      // For demo purposes, we'll just mark it as completed
+      // In a real app, this would update the backend
+      notifyListeners();
+    }
   }
 
   void logout() {

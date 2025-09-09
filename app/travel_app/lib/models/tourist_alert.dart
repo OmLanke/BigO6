@@ -178,4 +178,70 @@ class TouristAlert {
       metadata: json['metadata'] ?? {},
     );
   }
+
+  // Backend JSON format conversion
+  factory TouristAlert.fromBackendJson(Map<String, dynamic> json) {
+    AlertType alertType = AlertType.deviation;
+    AlertPriority priority = AlertPriority.medium;
+    
+    // Map backend alertType to our enum
+    switch (json['alertType']?.toLowerCase()) {
+      case 'sos':
+      case 'emergency':
+        alertType = AlertType.sos;
+        priority = AlertPriority.critical;
+        break;
+      case 'geofence':
+        alertType = AlertType.geofence;
+        break;
+      case 'restricted':
+        alertType = AlertType.restricted;
+        break;
+      case 'inactivity':
+        alertType = AlertType.inactivity;
+        break;
+      case 'lowbattery':
+        alertType = AlertType.lowBattery;
+        break;
+      default:
+        alertType = AlertType.deviation;
+    }
+    
+    // Map backend severity to our priority
+    switch (json['severity']?.toLowerCase()) {
+      case 'critical':
+        priority = AlertPriority.critical;
+        break;
+      case 'high':
+        priority = AlertPriority.high;
+        break;
+      case 'medium':
+        priority = AlertPriority.medium;
+        break;
+      case 'low':
+        priority = AlertPriority.low;
+        break;
+    }
+    
+    return TouristAlert(
+      id: json['id'],
+      touristId: json['userId'], // Backend uses userId
+      type: alertType,
+      priority: priority,
+      title: json['alertType']?.toString().toUpperCase() ?? 'Alert',
+      message: json['message'],
+      latitude: json['latitude']?.toDouble(),
+      longitude: json['longitude']?.toDouble(),
+      timestamp: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
+      isResolved: json['isResolved'] ?? false,
+      resolvedBy: null,
+      resolvedAt: json['updatedAt'] != null && json['isResolved'] == true
+          ? DateTime.parse(json['updatedAt'])
+          : null,
+      metadata: {
+        'location': json['location'],
+        'tripId': json['tripId'],
+      },
+    );
+  }
 }

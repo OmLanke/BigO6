@@ -57,6 +57,30 @@ class TouristProfile {
     );
   }
 
+  // Backend JSON has different field names
+  factory TouristProfile.fromBackendJson(Map<String, dynamic> json) {
+    return TouristProfile(
+      id: json['id'],
+      name: json['name'] ?? 'Pradyum Mistry',
+      passportNumber: json['passportNumber'] ?? 'M12345678',
+      nationality: json['nationality'] ?? 'India',
+      emergencyContact: json['emergencyContactName'] ?? 'Emergency Contact',
+      emergencyContactNumber: json['emergencyContactPhone'] ?? '+91-98765-43210',
+      tripStartDate: DateTime.now().subtract(const Duration(days: 1)),
+      tripEndDate: DateTime.now().add(const Duration(days: 6)),
+      plannedLocations: const [
+        'Red Fort, Delhi',
+        'India Gate, Delhi',
+        'Qutub Minar, Delhi',
+        'Lotus Temple, Delhi',
+        'Taj Mahal, Agra',
+        'Gateway of India, Mumbai',
+      ],
+      profileImageUrl: json['profileImageUrl'] ?? '',
+      isActive: json['isActive'] ?? true,
+    );
+  }
+
   TouristProfile copyWith({
     String? id,
     String? name,

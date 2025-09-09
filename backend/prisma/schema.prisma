@@ -30,4 +30,108 @@ model User {
   emergencyContactName     String?
   emergencyContactPhone    String?
   emergencyContactRelation String?
+  
+  // Tourism specific fields
+  passportNumber    String?
+  nationality       String?
+  aadharCardUrl     String?  // For KYC verification
+  profileImageUrl   String?
+  isKycVerified     Boolean  @default(false)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Relations
+  trips             Trip[]
+  alerts            TouristAlert[]
+  locations         LocationData[]
+  safetyScores      SafetyScore[]
+}
+
+model Trip {
+  id                String   @id @default(uuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  tripStartDate     DateTime
+  tripEndDate       DateTime
+  plannedLocations  String[] // Array of location names
+  currentLocation   String?
+  status            String   @default("planned") // planned, active, completed, cancelled
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Relations
+  alerts            TouristAlert[]
+  locations         LocationData[]
+}
+
+model TouristAlert {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tripId      String?
+  trip        Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  
+  alertType   String   // emergency, safety, weather, etc.
+  message     String
+  severity    String   // low, medium, high, critical
+  location    String?
+  latitude    Float?
+  longitude   Float?
+  isResolved  Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model LocationData {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tripId      String?
+  trip        Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  
+  latitude    Float
+  longitude   Float
+  address     String?
+  timestamp   DateTime @default(now())
+  accuracy    Float?
+  speed       Float?
+  
+  createdAt   DateTime @default(now())
+}
+
+model SafetyScore {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  location    String
+  latitude    Float
+  longitude   Float
+  score       Float    // 0.0 to 10.0
+  factors     Json     // JSON object with various safety factors
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([userId, location])
+}
+
+model Geofence {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  
+  // Polygon coordinates for geofence boundary
+  coordinates Json     // Array of [lat, lng] pairs
+  
+  // Geofence properties
+  type        String   // safe_zone, danger_zone, restricted_area, etc.
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

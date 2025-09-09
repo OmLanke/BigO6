@@ -59,7 +59,7 @@ class LandingScreen extends StatelessWidget {
                     const SizedBox(height: 24),
 
                     Text(
-                          'TravelSafe',
+                          'Tour Raksha',
                           style: theme.textTheme.headlineLarge?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,

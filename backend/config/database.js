@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const connectDB = async () => {
   try {
     const mongoURI =
-      process.env.MONGODB_URI || "mongodb://localhost:27017/mern-tw-starter";
+      process.env.MONGODB_URI || "mongodb://localhost:27017/tourism-safety";
 
     const conn = await mongoose.connect(mongoURI, {
       // These options are no longer needed in Mongoose 6+, but included for compatibility
@@ -25,13 +25,17 @@ const connectDB = async () => {
 
     // Graceful shutdown
     process.on("SIGINT", async () => {
-      await mongoose.connection.close();
-      console.log("MongoDB connection closed through app termination");
+      try {
+        await mongoose.connection.close();
+        console.log("MongoDB connection closed through app termination");
+      } catch (error) {
+        console.log("Error closing MongoDB connection:", error.message);
+      }
       process.exit(0);
     });
   } catch (error) {
-    console.error("Error connecting to MongoDB:", error.message);
-    process.exit(1);
+    console.warn("MongoDB connection failed (continuing without MongoDB):", error.message);
+    // Don't exit the process, let the app continue with Prisma
   }
 };
 

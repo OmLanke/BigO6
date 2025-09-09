@@ -26,9 +26,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   // Default center point (can be changed to any location you prefer)
   static const LatLng _defaultCenter = LatLng(
-    19.0728,
-    72.8997,
-  ); // Somaiya Campus
+    28.6139,
+    77.2090,
+  ); // New Delhi, India
   static const double _initialZoom = 15.0;
 
   @override
