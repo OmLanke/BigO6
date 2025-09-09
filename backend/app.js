@@ -78,8 +78,6 @@ app.get("/api/docs", (req, res) => {
     title: "Tourism Safety Platform API",
     version: "1.0.0",
     description: "Backend API for tourist safety monitoring and management",
-    author: "Pradyum Mistry",
-    location: "India",
     endpoints: {
       users: {
         description: "User management and KYC operations",
@@ -179,8 +177,6 @@ process.on("SIGINT", async () => {
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📍 Location: India`);
-  console.log(`👨‍💻 Developer: Pradyum Mistry`);
   console.log(`🌐 Environment: ${process.env.NODE_ENV || "development"}`);
   console.log(`📚 API Documentation: http://localhost:${PORT}/api/docs`);
   console.log(`❤️ Health Check: http://localhost:${PORT}/api/health`);

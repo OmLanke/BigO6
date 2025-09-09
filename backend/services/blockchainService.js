@@ -5,18 +5,189 @@ const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const RPC_URL = process.env.RPC_URL;
 const TOURIST_REGISTRY_ADDRESS = process.env.TOURIST_REGISTRY_ADDRESS;
 
-// TouristRegistry contract ABI
+// TouristRegistry contract ABI - Updated with actual deployed contract
 const TOURIST_REGISTRY_ABI = [
-  "function registerTourist(bytes32 _offChainIdHash) public returns (uint256)",
-  "function registerTrip(uint256 _touristId, uint256 _startDate, uint256 _endDate, string memory _itinerary) public returns (uint256)",
-  "function isTouristRegistered(uint256 _touristId) public view returns (bool)",
-  "function getTourist(uint256 _touristId) public view returns (bytes32, bool)",
-  "function getTrip(uint256 _tripId) public view returns (uint256, uint256, uint256, string)",
-  "function getTouristIdByHash(bytes32 _offChainIdHash) public view returns (uint256)",
-  "function getTouristTripIds(uint256 _touristId) public view returns (uint256[])",
-  "function getTouristTripCount(uint256 _touristId) public view returns (uint256)",
-  "function getMultipleTrips(uint256[] _tripIds) public view returns (uint256[], uint256[], uint256[], string[])",
-  "function getTotalCounts() public view returns (uint256, uint256)"
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_offChainIdHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "registerTourist",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_touristId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_startDate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_endDate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "_itinerary",
+        "type": "string"
+      }
+    ],
+    "name": "registerTrip",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_touristId",
+        "type": "uint256"
+      }
+    ],
+    "name": "isTouristRegistered",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_touristId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getTourist",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_tripId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getTrip",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "touristId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "offChainIdHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "TouristRegistered",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tripId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "touristId",
+        "type": "uint256"
+      }
+    ],
+    "name": "TripRegistered",
+    "type": "event"
+  }
 ];
 
 class BlockchainService {
@@ -68,31 +239,34 @@ class BlockchainService {
     try {
       const hashedUserId = this.hashUserId(userId);
       
-      // Check if already registered
-      const existingTouristId = await this.contract.getTouristIdByHash(hashedUserId);
-      if (existingTouristId.toString() !== '0') {
-        return {
-          blockchainTouristId: existingTouristId.toString(),
-          transactionHash: null,
-          alreadyRegistered: true
-        };
-      }
-
+      console.log(`Registering tourist with hash: ${hashedUserId}`);
+      
       const tx = await this.contract.registerTourist(hashedUserId);
+      console.log(`Transaction sent: ${tx.hash}`);
+      
       const receipt = await tx.wait();
+      console.log(`Transaction confirmed in block: ${receipt.blockNumber}`);
 
       // Extract tourist ID from transaction logs
-      const touristRegisteredEvent = receipt.logs.find(
-        log => log.fragment && log.fragment.name === 'TouristRegistered'
-      );
+      let blockchainTouristId = null;
       
-      const blockchainTouristId = touristRegisteredEvent ? 
-        touristRegisteredEvent.args[0].toString() : null;
+      for (const log of receipt.logs) {
+        try {
+          const parsedLog = this.contract.interface.parseLog(log);
+          if (parsedLog && parsedLog.name === 'TouristRegistered') {
+            blockchainTouristId = parsedLog.args[0].toString();
+            break;
+          }
+        } catch (e) {
+          // Skip unparseable logs
+        }
+      }
 
       return {
-        blockchainTouristId,
+        touristId: blockchainTouristId,
         transactionHash: receipt.hash,
-        alreadyRegistered: false
+        blockNumber: receipt.blockNumber,
+        gasUsed: receipt.gasUsed.toString()
       };
     } catch (error) {
       console.error('Error registering tourist on blockchain:', error);
@@ -101,17 +275,16 @@ class BlockchainService {
   }
 
   // Register trip on blockchain
-  async registerTrip(userId, startDate, endDate, itinerary) {
+  async registerTrip(blockchainTouristId, startDate, endDate, itinerary) {
     if (!this.isEnabled) {
       throw new Error('Blockchain service not available');
     }
 
     try {
-      const hashedUserId = this.hashUserId(userId);
-      const blockchainTouristId = await this.contract.getTouristIdByHash(hashedUserId);
-
-      if (blockchainTouristId.toString() === '0') {
-        throw new Error('User not registered on blockchain');
+      // Validate tourist is registered
+      const isRegistered = await this.contract.isTouristRegistered(blockchainTouristId);
+      if (!isRegistered) {
+        throw new Error('Tourist not registered on blockchain');
       }
 
       const startTimestamp = Math.floor(new Date(startDate).getTime() / 1000);
@@ -119,26 +292,40 @@ class BlockchainService {
       const itineraryString = typeof itinerary === 'object' ? 
         JSON.stringify(itinerary) : itinerary.toString();
 
+      console.log(`Registering trip for tourist ${blockchainTouristId}`);
+      
       const tx = await this.contract.registerTrip(
         blockchainTouristId,
         startTimestamp,
         endTimestamp,
         itineraryString
       );
+      console.log(`Trip transaction sent: ${tx.hash}`);
+      
       const receipt = await tx.wait();
+      console.log(`Trip transaction confirmed in block: ${receipt.blockNumber}`);
 
       // Extract trip ID from transaction logs
-      const tripRegisteredEvent = receipt.logs.find(
-        log => log.fragment && log.fragment.name === 'TripRegistered'
-      );
+      let blockchainTripId = null;
       
-      const blockchainTripId = tripRegisteredEvent ? 
-        tripRegisteredEvent.args[0].toString() : null;
+      for (const log of receipt.logs) {
+        try {
+          const parsedLog = this.contract.interface.parseLog(log);
+          if (parsedLog && parsedLog.name === 'TripRegistered') {
+            blockchainTripId = parsedLog.args[0].toString();
+            break;
+          }
+        } catch (e) {
+          // Skip unparseable logs
+        }
+      }
 
       return {
-        blockchainTripId,
-        blockchainTouristId: blockchainTouristId.toString(),
-        transactionHash: receipt.hash
+        tripId: blockchainTripId,
+        touristId: blockchainTouristId.toString(),
+        transactionHash: receipt.hash,
+        blockNumber: receipt.blockNumber,
+        gasUsed: receipt.gasUsed.toString()
       };
     } catch (error) {
       console.error('Error registering trip on blockchain:', error);
@@ -147,47 +334,32 @@ class BlockchainService {
   }
 
   // Get tourist blockchain data
-  async getTouristBlockchainData(userId) {
+  async getTouristBlockchainData(blockchainTouristId) {
     if (!this.isEnabled) {
       return {
         isRegistered: false,
         touristId: '0',
-        tripCount: 0,
-        trips: []
+        offChainIdHash: ''
       };
     }
 
     try {
-      const hashedUserId = this.hashUserId(userId);
-      const blockchainTouristId = await this.contract.getTouristIdByHash(hashedUserId);
-      const isRegistered = blockchainTouristId.toString() !== '0';
+      const isRegistered = await this.contract.isTouristRegistered(blockchainTouristId);
       
-      let trips = [];
-      let tripCount = 0;
-      
-      if (isRegistered) {
-        const tripIds = await this.contract.getTouristTripIds(blockchainTouristId);
-        tripCount = tripIds.length;
-        
-        if (tripIds.length > 0) {
-          const [touristIds, startDates, endDates, itineraries] = 
-            await this.contract.getMultipleTrips(tripIds);
-          
-          trips = tripIds.map((tripId, index) => ({
-            blockchainTripId: tripId.toString(),
-            touristId: touristIds[index].toString(),
-            startDate: new Date(Number(startDates[index]) * 1000),
-            endDate: new Date(Number(endDates[index]) * 1000),
-            itinerary: itineraries[index]
-          }));
-        }
+      if (!isRegistered) {
+        return {
+          isRegistered: false,
+          touristId: blockchainTouristId.toString(),
+          offChainIdHash: ''
+        };
       }
 
+      const [offChainIdHash, registered] = await this.contract.getTourist(blockchainTouristId);
+
       return {
-        isRegistered,
+        isRegistered: registered,
         touristId: blockchainTouristId.toString(),
-        tripCount,
-        trips
+        offChainIdHash: offChainIdHash
       };
     } catch (error) {
       console.error('Error getting tourist blockchain data:', error);
@@ -200,49 +372,76 @@ class BlockchainService {
     }
   }
 
-  // Get contract stats
-  async getContractStats() {
+  // Get trip data from blockchain
+  async getTripBlockchainData(tripId) {
     if (!this.isEnabled) {
-      return { totalTourists: 0, totalTrips: 0 };
+      return null;
     }
 
     try {
-      const [totalTourists, totalTrips] = await this.contract.getTotalCounts();
+      const [touristId, startDate, endDate, itinerary] = await this.contract.getTrip(tripId);
+      
       return {
-        totalTourists: totalTourists.toString(),
-        totalTrips: totalTrips.toString()
+        tripId: tripId.toString(),
+        touristId: touristId.toString(),
+        startDate: new Date(Number(startDate) * 1000),
+        endDate: new Date(Number(endDate) * 1000),
+        itinerary: itinerary
       };
     } catch (error) {
-      console.error('Error getting contract stats:', error);
-      return { totalTourists: 0, totalTrips: 0 };
+      console.error('Error getting trip blockchain data:', error);
+      return null;
     }
   }
 
-  // Verify trip on blockchain
-  async verifyTrip(userId, tripId = null) {
+  // Verify trip exists on blockchain
+  async verifyTrip(tripId) {
     if (!this.isEnabled) {
-      return { isVerified: false, tripIds: [] };
+      return { isValid: false };
     }
 
     try {
-      const hashedUserId = this.hashUserId(userId);
-      const blockchainTouristId = await this.contract.getTouristIdByHash(hashedUserId);
+      const tripData = await this.getTripBlockchainData(tripId);
       
-      if (blockchainTouristId.toString() === '0') {
-        return { isVerified: false, tripIds: [] };
-      }
-
-      const blockchainTripIds = await this.contract.getTouristTripIds(blockchainTouristId);
-      const isVerified = blockchainTripIds.length > 0;
-
       return {
-        isVerified,
-        touristId: blockchainTouristId.toString(),
-        tripIds: blockchainTripIds.map(id => id.toString())
+        isValid: tripData !== null,
+        tripData: tripData
       };
     } catch (error) {
       console.error('Error verifying trip:', error);
-      return { isVerified: false, tripIds: [] };
+      return { isValid: false };
+    }
+  }
+
+  // Get blockchain statistics (simplified version)
+  async getBlockchainStats() {
+    if (!this.isEnabled) {
+      return { 
+        totalTourists: '0', 
+        totalTrips: '0',
+        contractAddress: TOURIST_REGISTRY_ADDRESS 
+      };
+    }
+
+    try {
+      // Since your contract doesn't have getTotalCounts, we'll return basic info
+      const owner = await this.contract.owner();
+      
+      return {
+        totalTourists: 'N/A', // Would need to track this separately
+        totalTrips: 'N/A',    // Would need to track this separately
+        contractAddress: TOURIST_REGISTRY_ADDRESS,
+        contractOwner: owner,
+        isConnected: true
+      };
+    } catch (error) {
+      console.error('Error getting blockchain stats:', error);
+      return { 
+        totalTourists: '0', 
+        totalTrips: '0',
+        contractAddress: TOURIST_REGISTRY_ADDRESS,
+        isConnected: false
+      };
     }
   }
 }

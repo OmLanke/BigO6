@@ -310,11 +310,7 @@ export const registerUserOnBlockchain = async (req, res) => {
     }
 
     // Register on blockchain
-    const result = await blockchainService.registerTourist(
-      user.name,
-      user.email,
-      user.id
-    );
+    const result = await blockchainService.registerTourist(user.id);
 
     // Update user with blockchain ID
     await prisma.user.update({
@@ -330,6 +326,8 @@ export const registerUserOnBlockchain = async (req, res) => {
       data: {
         touristId: result.touristId.toString(),
         transactionHash: result.transactionHash,
+        blockNumber: result.blockNumber,
+        gasUsed: result.gasUsed,
       },
     });
   } catch (error) {
