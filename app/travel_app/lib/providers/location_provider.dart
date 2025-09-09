@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../models/location_data.dart';
 import '../models/safety_score.dart';
 import '../models/geofence.dart';
@@ -82,23 +81,40 @@ class LocationProvider extends ChangeNotifier {
   }
 
   Future<void> _checkPermissions() async {
-    // Check location permission
-    PermissionStatus locationStatus = await Permission.location.status;
+    try {
+      // Check if location services are enabled first
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _locationError = 'Location services are disabled. Please enable them in settings.';
+        _hasLocationPermission = false;
+        notifyListeners();
+        return;
+      }
 
-    if (locationStatus.isDenied) {
-      locationStatus = await Permission.location.request();
-    }
-
-    _hasLocationPermission = locationStatus.isGranted;
-
-    // Check if location services are enabled
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      _locationError = 'Location services are disabled';
+      // Check location permission using Geolocator
+      LocationPermission permission = await Geolocator.checkPermission();
+      
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      
+      if (permission == LocationPermission.deniedForever) {
+        _locationError = 'Location permissions are permanently denied. Please enable them in settings.';
+        _hasLocationPermission = false;
+      } else if (permission == LocationPermission.denied) {
+        _locationError = 'Location permission denied.';
+        _hasLocationPermission = false;
+      } else {
+        _hasLocationPermission = true;
+        _locationError = null;
+      }
+      
+      notifyListeners();
+    } catch (e) {
+      _locationError = 'Failed to check permissions: $e';
       _hasLocationPermission = false;
+      notifyListeners();
     }
-
-    notifyListeners();
   }
 
   Future<void> _getCurrentLocation() async {
@@ -240,6 +256,26 @@ class LocationProvider extends ChangeNotifier {
       }
     }
   }
+
+  Future<void> openLocationSettings() async {
+    await Geolocator.openLocationSettings();
+  }
+
+  Future<void> openAppSettings() async {
+    await Geolocator.openAppSettings();
+  }
+
+  // New methods for the map screen
+  Future<void> startLiveTracking() async {
+    await startTracking();
+  }
+
+  Future<void> stopLiveTracking() async {
+    stopTracking();
+  }
+
+  // Add hasPermission getter
+  bool get hasPermission => _hasLocationPermission;
 
   @override
   void dispose() {

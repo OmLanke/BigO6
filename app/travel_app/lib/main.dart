@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'core/theme/app_theme.dart';
+import 'package:travel_app/core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'providers/location_provider.dart';
 import 'providers/tourist_provider.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const TravelApp());
 }
 

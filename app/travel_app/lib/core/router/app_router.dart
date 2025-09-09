@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../screens/splash_screen.dart';
+import '../../screens/landing_screen.dart';
 import '../../screens/onboarding_screen.dart';
 import '../../screens/registration_screen.dart';
 import '../../screens/home_screen.dart';
@@ -19,6 +20,13 @@ class AppRouter {
         path: '/splash',
         name: 'splash',
         builder: (context, state) => const SplashScreen(),
+      ),
+
+      // Landing Page
+      GoRoute(
+        path: '/landing',
+        name: 'landing',
+        builder: (context, state) => const LandingScreen(),
       ),
 
       // Onboarding
