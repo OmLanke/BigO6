@@ -1,28 +1,28 @@
-const express = require('express');
-const digitalIDController = require('../controllers/digitalIDController');
-const { validateDigitalID, validateUUID } = require('../middleware/validation');
+import { Router } from 'express';
+import { getAllDigitalIDs, getDigitalIDCount, getDigitalIDById, getDigitalIDByUserId, issueDigitalID, updateDigitalIDStatus, revokeDigitalID } from '../controllers/digitalIDController.js';
+import { validateDigitalID, validateUUID } from '../middleware/validation.js';
 
-const router = express.Router();
+const router = Router();
 
 // GET all digital IDs (admin only)
-router.get('/', digitalIDController.getAllDigitalIDs);
+router.get('/', getAllDigitalIDs);
 
 // GET count of digital IDs (for dashboard)
-router.get('/count', digitalIDController.getDigitalIDCount);
+router.get('/count', getDigitalIDCount);
 
 // GET single digital ID by ID
-router.get('/:id', validateUUID('id'), digitalIDController.getDigitalIDById);
+router.get('/:id', validateUUID('id'), getDigitalIDById);
 
 // GET digital ID by user ID
-router.get('/user/:userId', validateUUID('userId'), digitalIDController.getDigitalIDByUserId);
+router.get('/user/:userId', validateUUID('userId'), getDigitalIDByUserId);
 
 // POST issue new digital ID
-router.post('/', validateDigitalID, digitalIDController.issueDigitalID);
+router.post('/', validateDigitalID, issueDigitalID);
 
 // PATCH update digital ID status
-router.patch('/:id', validateUUID('id'), validateDigitalID, digitalIDController.updateDigitalIDStatus);
+router.patch('/:id', validateUUID('id'), validateDigitalID, updateDigitalIDStatus);
 
 // DELETE digital ID (revoke)
-router.delete('/:id', validateUUID('id'), digitalIDController.revokeDigitalID);
+router.delete('/:id', validateUUID('id'), revokeDigitalID);
 
-module.exports = router;
+export default router;

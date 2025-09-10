@@ -3,7 +3,7 @@
 
 import fetch from 'node-fetch';
 
-const BASE_URL = 'http://localhost:3000'; // Adjust if your server runs on a different port
+const BASE_URL = 'http://localhost:8000'; // Adjust if your server runs on a different port
 
 // Test the OTP flow
 const testOTPFlow = async () => {

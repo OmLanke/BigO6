@@ -1,8 +1,8 @@
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from "../generated/prisma/index.js";
 const prisma = new PrismaClient();
 
 // Get all feedback entries
-exports.getAllFeedback = async (req, res) => {
+export async function getAllFeedback(req, res) {
     try {
         // Add pagination
         const page = parseInt(req.query.page) || 1;
@@ -43,10 +43,10 @@ exports.getAllFeedback = async (req, res) => {
             details: error.message
         });
     }
-};
+}
 
 // Get feedback statistics (for dashboard)
-exports.getFeedbackStats = async (req, res) => {
+export async function getFeedbackStats(req, res) {
     try {
         // Get total feedback count
         const totalCount = await prisma.feedback.count();
@@ -110,10 +110,10 @@ exports.getFeedbackStats = async (req, res) => {
             details: error.message
         });
     }
-};
+}
 
 // Get feedback by category
-exports.getFeedbackByCategory = async (req, res) => {
+export async function getFeedbackByCategory(req, res) {
     try {
         const { category } = req.params;
 
@@ -159,10 +159,10 @@ exports.getFeedbackByCategory = async (req, res) => {
             details: error.message
         });
     }
-};
+}
 
 // Get feedback by ID
-exports.getFeedbackById = async (req, res) => {
+export async function getFeedbackById(req, res) {
     try {
         const { id } = req.params;
 
@@ -190,10 +190,10 @@ exports.getFeedbackById = async (req, res) => {
             details: error.message
         });
     }
-};
+}
 
 // Get feedback by user ID
-exports.getFeedbackByUserId = async (req, res) => {
+export async function getFeedbackByUserId(req, res) {
     try {
         const { userId } = req.params;
 
@@ -211,10 +211,10 @@ exports.getFeedbackByUserId = async (req, res) => {
             details: error.message
         });
     }
-};
+}
 
 // Create new feedback
-exports.createFeedback = async (req, res) => {
+export async function createFeedback(req, res) {
     try {
         const { userId, rating, category, comment } = req.body;
 
@@ -249,10 +249,10 @@ exports.createFeedback = async (req, res) => {
             details: error.message
         });
     }
-};
+}
 
 // Delete feedback
-exports.deleteFeedback = async (req, res) => {
+export async function deleteFeedback(req, res) {
     try {
         const { id } = req.params;
 
@@ -271,4 +271,4 @@ exports.deleteFeedback = async (req, res) => {
             details: error.message
         });
     }
-};
+}

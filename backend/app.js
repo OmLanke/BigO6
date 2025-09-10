@@ -1,15 +1,4 @@
 import dotenv from "dotenv";
-// Load environment vari// API routes
-app.use("/api/users", userRoutes);
-app.use("/api/trips", tripRoutes);
-app.use("/api/alerts", alertRoutes);
-app.use("/api/locations", locationRoutes);
-app.use("/api/safety", safetyRoutes);
-app.use("/api/geofences", geofenceRoutes);
-app.use("/api/blockchain", blockchainRoutes);
-app.use("/api/digital-ids", digitalIDRoutes);
-app.use("/api/efir", efirRoutes);
-app.use("/api/feedback", feedbackRoutes);
 dotenv.config();
 
 import express from "express";
@@ -40,7 +29,18 @@ import {
 const prisma = new PrismaClient();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8000;
+
+// Test database connection on startup
+async function testDatabaseConnection() {
+  try {
+    await prisma.$connect();
+    console.log("✅ Database connected successfully");
+  } catch (error) {
+    console.error("❌ Database connection failed:", error);
+    process.exit(1);
+  }
+}
 
 // Basic middleware
 app.use(requestLogger);
@@ -225,6 +225,18 @@ app.get("/api/docs", (req, res) => {
 app.use(notFound);
 app.use(errorHandler);
 
+// Handle unhandled promise rejections
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+  // Don't exit the process immediately, log the error and continue
+});
+
+// Handle uncaught exceptions
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught Exception:", error);
+  process.exit(1);
+});
+
 // Graceful shutdown
 process.on("SIGTERM", async () => {
   console.log("SIGTERM received, shutting down gracefully");
@@ -238,11 +250,14 @@ process.on("SIGINT", async () => {
   process.exit(0);
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📍 Location: India`);
   console.log(`👨‍💻 Developer: Pradyum Mistry`);
   console.log(`🌐 Environment: ${process.env.NODE_ENV || "development"}`);
   console.log(`📚 API Documentation: http://localhost:${PORT}/api/docs`);
   console.log(`❤️ Health Check: http://localhost:${PORT}/api/health`);
+  
+  // Test database connection after server starts
+  await testDatabaseConnection();
 });

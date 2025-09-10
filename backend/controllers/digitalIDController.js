@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from "../generated/prisma/index.js";
 const prisma = new PrismaClient();
 
 // Helper function to generate unique ID number
@@ -22,7 +22,7 @@ const generateUniqueIDNumber = async () => {
 };
 
 // Get all digital IDs (admin only)
-exports.getAllDigitalIDs = async (req, res) => {
+export async function getAllDigitalIDs(req, res) {
     try {
         const digitalIDs = await prisma.digitalID.findMany({
             include: {
@@ -46,10 +46,10 @@ exports.getAllDigitalIDs = async (req, res) => {
             details: error.message
         });
     }
-};
+}
 
 // Get count of digital IDs (for dashboard)
-exports.getDigitalIDCount = async (req, res) => {
+export async function getDigitalIDCount(req, res) {
     try {
         const count = await prisma.digitalID.count();
 
@@ -78,10 +78,10 @@ exports.getDigitalIDCount = async (req, res) => {
             details: error.message
         });
     }
-};
+}
 
 // Get single digital ID by ID
-exports.getDigitalIDById = async (req, res) => {
+export async function getDigitalIDById(req, res) {
     try {
         const { id } = req.params;
 
@@ -112,10 +112,10 @@ exports.getDigitalIDById = async (req, res) => {
             details: error.message
         });
     }
-};
+}
 
 // Get digital ID by user ID
-exports.getDigitalIDByUserId = async (req, res) => {
+export async function getDigitalIDByUserId(req, res) {
     try {
         const { userId } = req.params;
 
@@ -146,10 +146,10 @@ exports.getDigitalIDByUserId = async (req, res) => {
             details: error.message
         });
     }
-};
+}
 
 // Issue new digital ID
-exports.issueDigitalID = async (req, res) => {
+export async function issueDigitalID(req, res) {
     try {
         const { userId, expiresAt } = req.body;
 
@@ -205,10 +205,10 @@ exports.issueDigitalID = async (req, res) => {
             details: error.message
         });
     }
-};
+}
 
 // Update digital ID status
-exports.updateDigitalIDStatus = async (req, res) => {
+export async function updateDigitalIDStatus(req, res) {
     try {
         const { id } = req.params;
         const { status, expiresAt } = req.body;
@@ -239,10 +239,10 @@ exports.updateDigitalIDStatus = async (req, res) => {
             details: error.message
         });
     }
-};
+}
 
 // Revoke digital ID
-exports.revokeDigitalID = async (req, res) => {
+export async function revokeDigitalID(req, res) {
     try {
         const { id } = req.params;
 
@@ -268,4 +268,4 @@ exports.revokeDigitalID = async (req, res) => {
             details: error.message
         });
     }
-};
+}

@@ -57,6 +57,10 @@ class AuthService {
     String? address,
     String? gender,
     String? bloodGroup,
+    double? height,
+    double? weight,
+    String? languages,
+    bool? organDonor,
   }) async {
     try {
       final userData = {
@@ -66,11 +70,15 @@ class AuthService {
         'passportNumber': passportNumber,
         'emergencyContactName': emergencyContact,
         'emergencyContactPhone': emergencyContactNumber,
-        if (emergencyContactRelationship != null) 'emergencyContactRelationship': emergencyContactRelationship,
+        if (emergencyContactRelationship != null) 'emergencyContactRelation': emergencyContactRelationship,
         if (dateOfBirth != null) 'dateOfBirth': dateOfBirth.toIso8601String(),
         if (address != null) 'address': address,
         if (gender != null) 'gender': gender,
         if (bloodGroup != null) 'bloodGroup': bloodGroup,
+        if (height != null) 'height': height,
+        if (weight != null) 'weight': weight,
+        if (languages != null) 'languages': languages,
+        if (organDonor != null) 'organDonor': organDonor,
         'isActive': true,
       };
 
@@ -84,6 +92,32 @@ class AuthService {
     } catch (e) {
       if (kDebugMode) {
         print('Error completing registration: $e');
+      }
+      return null;
+    }
+  }
+
+  /// Get user profile completeness status
+  Future<Map<String, dynamic>?> getProfileCompleteness(String userId) async {
+    try {
+      final response = await HttpService.get('/users/$userId/profile/completeness');
+      return response;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting profile completeness: $e');
+      }
+      return null;
+    }
+  }
+
+  /// Validate user data before submission
+  Future<Map<String, dynamic>?> validateUserData(Map<String, dynamic> userData) async {
+    try {
+      final response = await HttpService.post('/users/validate', userData);
+      return response;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error validating user data: $e');
       }
       return null;
     }

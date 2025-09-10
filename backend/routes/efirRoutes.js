@@ -1,37 +1,37 @@
-const express = require('express');
-const efirController = require('../controllers/efirController');
-const { validateEFIR, validateUUID } = require('../middleware/validation');
+import { Router } from 'express';
+import { getAllEFIRs, getEFIRsByStatus, getEFIRById, getEFIRsByUserId, getEFIRByAlertId, createEFIR, createEFIRFromAlert, updateEFIRStatus, updateEFIR, deleteEFIR } from '../controllers/efirController.js';
+import { validateEFIR, validateUUID } from '../middleware/validation.js';
 
-const router = express.Router();
+const router = Router();
 
 // GET all EFIRs (admin only)
-router.get('/', efirController.getAllEFIRs);
+router.get('/', getAllEFIRs);
 
 // GET EFIRs by status
-router.get('/status/:status', efirController.getEFIRsByStatus);
+router.get('/status/:status', getEFIRsByStatus);
 
 // GET EFIR by ID
-router.get('/:id', validateUUID('id'), efirController.getEFIRById);
+router.get('/:id', validateUUID('id'), getEFIRById);
 
 // GET EFIRs by user ID
-router.get('/user/:userId', validateUUID('userId'), efirController.getEFIRsByUserId);
+router.get('/user/:userId', validateUUID('userId'), getEFIRsByUserId);
 
 // GET EFIR by alert ID
-router.get('/alert/:alertId', validateUUID('alertId'), efirController.getEFIRByAlertId);
+router.get('/alert/:alertId', validateUUID('alertId'), getEFIRByAlertId);
 
 // POST create new EFIR
-router.post('/', validateEFIR, efirController.createEFIR);
+router.post('/', validateEFIR, createEFIR);
 
 // POST create EFIR from alert
-router.post('/from-alert/:alertId', validateUUID('alertId'), efirController.createEFIRFromAlert);
+router.post('/from-alert/:alertId', validateUUID('alertId'), createEFIRFromAlert);
 
 // PATCH update EFIR status
-router.patch('/:id/status', validateUUID('id'), validateEFIR, efirController.updateEFIRStatus);
+router.patch('/:id/status', validateUUID('id'), validateEFIR, updateEFIRStatus);
 
 // PUT update EFIR details
-router.put('/:id', validateUUID('id'), validateEFIR, efirController.updateEFIR);
+router.put('/:id', validateUUID('id'), validateEFIR, updateEFIR);
 
 // DELETE EFIR
-router.delete('/:id', validateUUID('id'), efirController.deleteEFIR);
+router.delete('/:id', validateUUID('id'), deleteEFIR);
 
-module.exports = router;
+export default router;

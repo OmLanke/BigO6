@@ -30,11 +30,15 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final _emergencyContactController = TextEditingController();
   final _emergencyPhoneController = TextEditingController();
   final _addressController = TextEditingController();
+  final _heightController = TextEditingController();
+  final _weightController = TextEditingController();
+  final _languagesController = TextEditingController();
   
   String? _gender;
   String? _bloodGroup;
   String? _emergencyContactRelationship;
   DateTime? _dateOfBirth;
+  bool _organDonor = false;
 
   DateTime _tripStartDate = DateTime.now();
   DateTime _tripEndDate = DateTime.now().add(const Duration(days: 7));
@@ -57,10 +61,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
     _passportController.dispose();
     _nationalityController.dispose();
     _emergencyContactController.dispose();
     _emergencyPhoneController.dispose();
+    _addressController.dispose();
+    _heightController.dispose();
+    _weightController.dispose();
+    _languagesController.dispose();
     _locationController.dispose();
     super.dispose();
   }
@@ -112,9 +122,72 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     }
   }
 
+  Future<void> _validateForm() async {
+    // Validate required fields
+    if (_nameController.text.trim().isEmpty) {
+      _showSnackBar('Please enter your full name');
+      return;
+    }
+    
+    if (_phoneController.text.trim().isEmpty) {
+      _showSnackBar('Please enter your phone number');
+      return;
+    }
+    
+    if (_passportController.text.trim().isEmpty) {
+      _showSnackBar('Please enter your passport number');
+      return;
+    }
+    
+    if (_nationalityController.text.trim().isEmpty) {
+      _showSnackBar('Please enter your nationality');
+      return;
+    }
+    
+    if (_emergencyContactController.text.trim().isEmpty) {
+      _showSnackBar('Please enter emergency contact name');
+      return;
+    }
+    
+    if (_emergencyPhoneController.text.trim().isEmpty) {
+      _showSnackBar('Please enter emergency contact phone');
+      return;
+    }
+    
+    if (_emergencyContactRelationship == null) {
+      _showSnackBar('Please select emergency contact relationship');
+      return;
+    }
+
+    // Validate using backend
+    final userData = {
+      'name': _nameController.text.trim(),
+      'phoneNumber': _phoneController.text.trim(),
+      'email': _emailController.text.trim(),
+      'passportNumber': _passportController.text.trim(),
+      'nationality': _nationalityController.text.trim(),
+      'dateOfBirth': _dateOfBirth?.toIso8601String(),
+      'height': _heightController.text.trim().isNotEmpty ? double.tryParse(_heightController.text.trim()) : null,
+      'weight': _weightController.text.trim().isNotEmpty ? double.tryParse(_weightController.text.trim()) : null,
+    };
+
+    final validation = await _authService.validateUserData(userData);
+    if (validation != null && validation['success'] == true && validation['isValid'] == false) {
+      final errors = validation['errors'] as List;
+      if (errors.isNotEmpty) {
+        _showSnackBar('Validation error: ${errors.first['message']}');
+        return;
+      }
+    }
+  }
+
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_plannedLocations.isEmpty) {
+    
+    // Validate additional fields
+    await _validateForm();
+    
+    if (_plannedLocations.isEmpty && widget.userId == null) {
       _showSnackBar('Please add at least one planned location');
       return;
     }
@@ -141,9 +214,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           emergencyContactNumber: _emergencyPhoneController.text.trim(),
           emergencyContactRelationship: _emergencyContactRelationship,
           dateOfBirth: _dateOfBirth,
-          address: _addressController.text,
+          address: _addressController.text.trim().isNotEmpty ? _addressController.text.trim() : null,
           gender: _gender,
           bloodGroup: _bloodGroup,
+          height: _heightController.text.trim().isNotEmpty ? double.tryParse(_heightController.text.trim()) : null,
+          weight: _weightController.text.trim().isNotEmpty ? double.tryParse(_weightController.text.trim()) : null,
+          languages: _languagesController.text.trim().isNotEmpty ? _languagesController.text.trim() : null,
+          organDonor: _organDonor,
         );
 
         if (profile != null) {
@@ -351,6 +428,216 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   return null;
                 },
               ),
+              const SizedBox(height: 16),
+
+              // Phone Number
+              CustomTextField(
+                controller: _phoneController,
+                label: 'Phone Number',
+                icon: Icons.phone_outlined,
+                keyboardType: TextInputType.phone,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter your phone number';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Date of Birth Selector
+              InkWell(
+                onTap: () async {
+                  final DateTime? picked = await showDatePicker(
+                    context: context,
+                    initialDate: _dateOfBirth ?? DateTime.now().subtract(const Duration(days: 6570)), // Default to 18 years ago
+                    firstDate: DateTime(1900),
+                    lastDate: DateTime.now(),
+                  );
+                  if (picked != null) {
+                    setState(() {
+                      _dateOfBirth = picked;
+                    });
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Date of Birth',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _dateOfBirth != null
+                                  ? '${_dateOfBirth!.day}/${_dateOfBirth!.month}/${_dateOfBirth!.year}'
+                                  : 'Select date of birth',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: _dateOfBirth != null 
+                                    ? null 
+                                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Gender Dropdown
+              DropdownButtonFormField<String>(
+                value: _gender,
+                decoration: InputDecoration(
+                  labelText: 'Gender',
+                  prefixIcon: const Icon(Icons.person_outline),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    ),
+                  ),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'Male', child: Text('Male')),
+                  DropdownMenuItem(value: 'Female', child: Text('Female')),
+                  DropdownMenuItem(value: 'Other', child: Text('Other')),
+                  DropdownMenuItem(value: 'Prefer not to say', child: Text('Prefer not to say')),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    _gender = value;
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Blood Group Dropdown
+              DropdownButtonFormField<String>(
+                value: _bloodGroup,
+                decoration: InputDecoration(
+                  labelText: 'Blood Group',
+                  prefixIcon: const Icon(Icons.bloodtype_outlined),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    ),
+                  ),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'A+', child: Text('A+')),
+                  DropdownMenuItem(value: 'A-', child: Text('A-')),
+                  DropdownMenuItem(value: 'B+', child: Text('B+')),
+                  DropdownMenuItem(value: 'B-', child: Text('B-')),
+                  DropdownMenuItem(value: 'AB+', child: Text('AB+')),
+                  DropdownMenuItem(value: 'AB-', child: Text('AB-')),
+                  DropdownMenuItem(value: 'O+', child: Text('O+')),
+                  DropdownMenuItem(value: 'O-', child: Text('O-')),
+                  DropdownMenuItem(value: 'Unknown', child: Text('Unknown')),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    _bloodGroup = value;
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Address
+              CustomTextField(
+                controller: _addressController,
+                label: 'Address',
+                icon: Icons.location_on_outlined,
+                maxLines: 2,
+              ),
+              const SizedBox(height: 16),
+
+              // Physical Information Row
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomTextField(
+                      controller: _heightController,
+                      label: 'Height (cm)',
+                      icon: Icons.height_outlined,
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: CustomTextField(
+                      controller: _weightController,
+                      label: 'Weight (kg)',
+                      icon: Icons.monitor_weight_outlined,
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Languages
+              CustomTextField(
+                controller: _languagesController,
+                label: 'Languages (comma-separated)',
+                icon: Icons.language_outlined,
+              ),
+              const SizedBox(height: 16),
+
+              // Organ Donor Checkbox
+              CheckboxListTile(
+                title: const Text('I am willing to be an organ donor'),
+                subtitle: const Text('This information may be helpful in medical emergencies'),
+                value: _organDonor,
+                onChanged: (value) {
+                  setState(() {
+                    _organDonor = value ?? false;
+                  });
+                },
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+              ),
               const SizedBox(height: 32),
 
               // Emergency Contact
@@ -431,8 +718,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ),
               const SizedBox(height: 32),
 
-              // Trip Details
-              _buildSectionHeader('Trip Details'),
+              // Trip Details (only for legacy flow, not OTP flow)
+              if (widget.userId == null) ...[
+                _buildSectionHeader('Trip Details'),
               const SizedBox(height: 16),
 
               // Date Selection
@@ -515,6 +803,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
+              ],
               ],
 
               // Register Button

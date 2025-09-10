@@ -1,8 +1,8 @@
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from "../generated/prisma/index.js";
 const prisma = new PrismaClient();
 
 // Get all EFIRs (admin only)
-exports.getAllEFIRs = async (req, res) => {
+export async function getAllEFIRs(req, res) {
     try {
         // Add pagination
         const page = parseInt(req.query.page) || 1;
@@ -45,10 +45,10 @@ exports.getAllEFIRs = async (req, res) => {
             details: error.message
         });
     }
-};
+}
 
 // Get EFIRs by status
-exports.getEFIRsByStatus = async (req, res) => {
+export async function getEFIRsByStatus(req, res) {
     try {
         const { status } = req.params;
         const validStatuses = ['pending', 'investigating', 'resolved', 'closed'];
@@ -102,10 +102,10 @@ exports.getEFIRsByStatus = async (req, res) => {
             details: error.message
         });
     }
-};
+}
 
 // Get EFIR by ID
-exports.getEFIRById = async (req, res) => {
+export async function getEFIRById(req, res) {
     try {
         const { id } = req.params;
 
@@ -136,10 +136,10 @@ exports.getEFIRById = async (req, res) => {
             details: error.message
         });
     }
-};
+}
 
 // Get EFIRs by user ID
-exports.getEFIRsByUserId = async (req, res) => {
+export async function getEFIRsByUserId(req, res) {
     try {
         const { userId } = req.params;
 
@@ -160,10 +160,10 @@ exports.getEFIRsByUserId = async (req, res) => {
             details: error.message
         });
     }
-};
+}
 
 // Get EFIR by alert ID
-exports.getEFIRByAlertId = async (req, res) => {
+export async function getEFIRByAlertId(req, res) {
     try {
         const { alertId } = req.params;
 
@@ -193,10 +193,10 @@ exports.getEFIRByAlertId = async (req, res) => {
             details: error.message
         });
     }
-};
+}
 
 // Create new EFIR
-exports.createEFIR = async (req, res) => {
+export async function createEFIR(req, res) {
     try {
         const {
             userId,
@@ -272,10 +272,10 @@ exports.createEFIR = async (req, res) => {
             details: error.message
         });
     }
-};
+}
 
 // Create EFIR from alert
-exports.createEFIRFromAlert = async (req, res) => {
+export async function createEFIRFromAlert(req, res) {
     try {
         const { alertId } = req.params;
         const { filedBy, reportType, description } = req.body;
@@ -322,10 +322,10 @@ exports.createEFIRFromAlert = async (req, res) => {
             details: error.message
         });
     }
-};
+}
 
 // Update EFIR status
-exports.updateEFIRStatus = async (req, res) => {
+export async function updateEFIRStatus(req, res) {
     try {
         const { id } = req.params;
         const { status } = req.body;
@@ -353,10 +353,10 @@ exports.updateEFIRStatus = async (req, res) => {
             details: error.message
         });
     }
-};
+}
 
 // Update EFIR details
-exports.updateEFIR = async (req, res) => {
+export async function updateEFIR(req, res) {
     try {
         const { id } = req.params;
         const { reportType, description, location, latitude, longitude } = req.body;
@@ -384,10 +384,10 @@ exports.updateEFIR = async (req, res) => {
             details: error.message
         });
     }
-};
+}
 
 // Delete EFIR
-exports.deleteEFIR = async (req, res) => {
+export async function deleteEFIR(req, res) {
     try {
         const { id } = req.params;
 
@@ -406,4 +406,4 @@ exports.deleteEFIR = async (req, res) => {
             details: error.message
         });
     }
-};
+}

@@ -10,11 +10,13 @@ import {
   sendEmailOTP,
   verifyEmailOTP,
   completeUserRegistration,
+  getUserProfileCompleteness,
+  validateUserData,
 } from "../controllers/userController.js";
 
 const router = express.Router();
 
-// Email verification and user registration flow
+// Unified email OTP flow (supports both login and registration)
 router.post("/auth/send-otp", sendEmailOTP);
 router.post("/auth/verify-otp", verifyEmailOTP);
 router.post("/:id/complete-registration", completeUserRegistration);
@@ -29,5 +31,9 @@ router.delete("/:id", deleteUser);
 // KYC operations
 router.post("/:id/kyc/aadhar", uploadAadharCard);
 router.get("/:id/kyc/status", getKycStatus);
+
+// Profile management
+router.get("/:id/profile/completeness", getUserProfileCompleteness);
+router.post("/validate", validateUserData);
 
 export default router;
