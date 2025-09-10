@@ -27,14 +27,14 @@ export default function PoliceDashboard() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold text-muted-foreground">Total Tourists</CardTitle>
           </CardHeader>
-          <CardContent><div className="text-3xl font-semibold tracking-tight">120</div></CardContent>
+          <CardContent><div className="text-3xl font-semibold tracking-tight">45</div></CardContent>
         </Card>
 
         <Card className="bg-zinc-50">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold text-muted-foreground">Digital IDs Issued</CardTitle>
           </CardHeader>
-          <CardContent><div className="text-3xl font-semibold tracking-tight">3</div></CardContent>
+          <CardContent><div className="text-3xl font-semibold tracking-tight">24</div></CardContent>
         </Card>
 
         <Card className="bg-zinc-50">
@@ -89,7 +89,7 @@ export default function PoliceDashboard() {
                     <TableCell>West Plaza</TableCell>
                     <TableCell>15:58</TableCell>
                     <TableCell>
-                      <Badge className="rounded-full bg-amber-200 text-amber-900">High</Badge>
+                      <Badge className="rounded-full bg-red-200 text-red-900">Critical</Badge>
                     </TableCell>
                   </TableRow>
                 </TableBody>
@@ -107,27 +107,24 @@ export default function PoliceDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="w-[110px]">ID</TableHead>
                     <TableHead className="w-[90px]">Rating</TableHead>
-                    <TableHead>Comment</TableHead>
+                    <TableHead>Location</TableHead>
                     <TableHead className="w-[130px]">Date</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody className="[&>tr:nth-child(odd)]:bg-muted/30">
                   <TableRow className="hover:bg-zinc-100/70">
-                    <TableCell>FB-1208</TableCell>
                     <TableCell>
                       <span className={`font-medium ${ratingColor(5)}`}>5★</span>
                     </TableCell>
-                    <TableCell>Officers were very helpful with directions.</TableCell>
+                    <TableCell>Info Kiosk A</TableCell>
                     <TableCell>2025-09-09</TableCell>
                   </TableRow>
                   <TableRow className="hover:bg-zinc-100/70">
-                    <TableCell>FB-1207</TableCell>
                     <TableCell>
                       <span className={`font-medium ${ratingColor(2)}`}>2★</span>
                     </TableCell>
-                    <TableCell>Queues too long near Gate 3.</TableCell>
+                    <TableCell>Gate 3</TableCell>
                     <TableCell>2025-09-09</TableCell>
                   </TableRow>
                 </TableBody>
@@ -135,6 +132,7 @@ export default function PoliceDashboard() {
             </div>
           </CardContent>
         </Card>
+
       </div>
     </div>
   );

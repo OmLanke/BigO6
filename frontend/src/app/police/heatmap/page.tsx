@@ -30,8 +30,8 @@ const OptimizedMap = dynamic(() => import('@/components/OptimizedMap'), {
 });
 
 const locations = [
-  { id: 'mumbai', name: 'Mumbai', coordinates: [72.8777, 19.0760] as [number, number] },
   { id: 'guwahati', name: 'Guwahati', coordinates: [91.7362, 26.1445] as [number, number] },
+  { id: 'mumbai', name: 'Mumbai', coordinates: [72.8777, 19.0760] as [number, number] },
   { id: 'delhi', name: 'New Delhi', coordinates: [77.2090, 28.6139] as [number, number] },
   { id: 'kolkata', name: 'Kolkata', coordinates: [88.3639, 22.5726] as [number, number] }
 ];

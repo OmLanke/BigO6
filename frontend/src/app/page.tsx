@@ -12,7 +12,7 @@ export default function Home() {
       <NavbarDemo />
       <main className="p-0 m-0">
         <Hero />
-        <Tablet/>
+        {/* <Tablet/> */}
         <Features/>
         <Contact/>
       </main>

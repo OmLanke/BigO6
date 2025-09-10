@@ -23,7 +23,6 @@ export default function PoliceDashboard() {
     <div className="mx-auto max-w-7xl space-y-6 p-6">
       <h1 className="text-3xl font-semibold tracking-tight">Live Alerts</h1>
 
-      {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card className="bg-white border border-red-200 shadow-sm rounded-xl">
           <CardHeader className="pb-2">
@@ -34,7 +33,7 @@ export default function PoliceDashboard() {
           </CardHeader>
           <CardContent className="pt-0">
             <div className="text-4xl font-bold text-red-600 tracking-tight leading-none">
-              3
+              2
             </div>
             <p className="text-xs text-zinc-500 mt-1">Priority incidents</p>
           </CardContent>
@@ -49,7 +48,7 @@ export default function PoliceDashboard() {
           </CardHeader>
           <CardContent className="pt-0">
             <div className="text-4xl font-bold text-amber-600 tracking-tight leading-none">
-              10
+              9
             </div>
             <p className="text-xs text-zinc-500 mt-1">Awaiting action</p>
           </CardContent>
@@ -83,9 +82,9 @@ export default function PoliceDashboard() {
                         SOS-001
                       </Link>
                     </TableCell>
-                    <TableCell className="font-medium">Panic</TableCell>
-                    <TableCell className="text-zinc-600">—</TableCell>
-                    <TableCell className="text-zinc-600">—</TableCell>
+                    <TableCell className="font-medium">SOS</TableCell>
+                    <TableCell className="text-zinc-600">East Taxi Stand</TableCell>
+                    <TableCell className="text-zinc-600">9:00AM</TableCell>
                     <TableCell>
                       <Badge className="rounded-full bg-red-100 text-red-900 ring-1 ring-red-200">
                         Critical
@@ -101,9 +100,9 @@ export default function PoliceDashboard() {
                         SOS-002
                       </Link>
                     </TableCell>
-                    <TableCell className="font-medium">Assistance</TableCell>
-                    <TableCell className="text-zinc-600">—</TableCell>
-                    <TableCell className="text-zinc-600">—</TableCell>
+                    <TableCell className="font-medium">SOS</TableCell>
+                    <TableCell className="text-zinc-600">Plaza</TableCell>
+                    <TableCell className="text-zinc-600">8:25AM</TableCell>
                     <TableCell>
                       <Badge className="rounded-full bg-red-100 text-red-900 ring-1 ring-red-200">
                         Critical
@@ -143,9 +142,9 @@ export default function PoliceDashboard() {
                         A-101
                       </Link>
                     </TableCell>
-                    <TableCell className="font-medium">Geo-fence</TableCell>
-                    <TableCell className="text-zinc-600">—</TableCell>
-                    <TableCell className="text-zinc-600">—</TableCell>
+                    <TableCell className="font-medium">Path Deviation</TableCell>
+                    <TableCell className="text-zinc-600">Restrooms</TableCell>
+                    <TableCell className="text-zinc-600">1:00PM</TableCell>
                     <TableCell>
                       <Badge className="rounded-full bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200">
                         Open
@@ -162,9 +161,9 @@ export default function PoliceDashboard() {
                         A-102
                       </Link>
                     </TableCell>
-                    <TableCell className="font-medium">Crowd Spike</TableCell>
-                    <TableCell className="text-zinc-600">—</TableCell>
-                    <TableCell className="text-zinc-600">—</TableCell>
+                    <TableCell className="font-medium">Path Deviation</TableCell>
+                    <TableCell className="text-zinc-600">Parking Lot</TableCell>
+                    <TableCell className="text-zinc-600">1:00PM</TableCell>
                     <TableCell>
                       <Badge className="rounded-full bg-zinc-100 text-zinc-900 ring-1 ring-blue-200">
                         Closed

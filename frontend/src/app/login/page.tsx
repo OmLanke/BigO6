@@ -13,7 +13,6 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right panel image */}
       <div className="bg-muted relative hidden lg:block">
         <Image
           src={TourRakshaLogo}
