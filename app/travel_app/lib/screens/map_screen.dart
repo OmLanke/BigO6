@@ -4,6 +4,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter/services.dart';
 import '../providers/location_provider.dart';
+import '../providers/tourist_provider.dart';
+import '../services/location_coordinates_service.dart';
 import '../utils/theme.dart';
 
 class MapScreen extends StatefulWidget {
@@ -236,6 +238,14 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           FloatingActionButton(
+            heroTag: "planned_locations",
+            onPressed: _showAllPlannedLocations,
+            child: const Icon(Icons.map),
+            tooltip: 'Show Planned Locations',
+            backgroundColor: const Color(0xFF2196F3),
+          ),
+          const SizedBox(height: 16),
+          FloatingActionButton(
             heroTag: "clear_pin",
             onPressed: () {
               setState(() {
@@ -261,6 +271,106 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   List<Marker> _buildMarkers(LocationProvider locationProvider) {
     List<Marker> markers = [];
+
+    // Get planned locations from tourist profile
+    final touristProvider = Provider.of<TouristProvider>(
+      context,
+      listen: false,
+    );
+    final plannedLocationMarkers = touristProvider.currentProfile != null
+        ? LocationCoordinatesService.getPlannedLocationMarkers(
+            touristProvider.currentProfile!.plannedLocations,
+          )
+        : <PlannedLocationMarker>[];
+
+    // Planned location markers
+    for (final plannedLocation in plannedLocationMarkers) {
+      markers.add(
+        Marker(
+          point: plannedLocation.coordinates,
+          width: 100,
+          height: 120,
+          child: GestureDetector(
+            onTap: () {
+              _showPlannedLocationDialog(plannedLocation);
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Order number badge
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryAccent,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${plannedLocation.order}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                // Pin marker
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: const Color(
+                      0xFF2196F3,
+                    ), // Blue color for planned locations
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 3),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.place, color: Colors.white, size: 20),
+                ),
+                // Location name (abbreviated)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black87,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    _abbreviateLocationName(plannedLocation.name),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     // Current location marker with animation
     if (locationProvider.currentLocation != null) {
@@ -543,6 +653,271 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             child: const Text('Grant Permission'),
           ),
         ],
+      ),
+    );
+  }
+
+  // Helper method to abbreviate location names for display
+  String _abbreviateLocationName(String locationName) {
+    if (locationName.length <= 12) return locationName;
+
+    // Extract key part of the location name
+    final parts = locationName.split(',');
+    if (parts.isNotEmpty) {
+      String mainPart = parts[0].trim();
+      if (mainPart.length > 12) {
+        return '${mainPart.substring(0, 9)}...';
+      }
+      return mainPart;
+    }
+
+    return '${locationName.substring(0, 9)}...';
+  }
+
+  // Show dialog with planned location details
+  void _showPlannedLocationDialog(PlannedLocationMarker plannedLocation) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: AppColors.primaryAccent,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+              child: Center(
+                child: Text(
+                  '${plannedLocation.order}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Planned Location',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.place, color: Color(0xFF2196F3)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    plannedLocation.name,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Icon(Icons.location_on, color: Colors.grey),
+                const SizedBox(width: 8),
+                Text(
+                  'Lat: ${plannedLocation.coordinates.latitude.toStringAsFixed(4)}',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.location_on, color: Colors.grey),
+                const SizedBox(width: 8),
+                Text(
+                  'Lng: ${plannedLocation.coordinates.longitude.toStringAsFixed(4)}',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primaryAccent.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline, color: Colors.blue),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'This is location #${plannedLocation.order} in your planned itinerary.',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _moveToLocation(plannedLocation.coordinates);
+            },
+            child: const Text('Go to Location'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper method to move map to a specific location
+  void _moveToLocation(LatLng location) {
+    if (_mapController != null) {
+      _mapController!.move(location, 15.0);
+    }
+  }
+
+  // Show all planned locations on the map
+  void _showAllPlannedLocations() {
+    final touristProvider = Provider.of<TouristProvider>(
+      context,
+      listen: false,
+    );
+    if (touristProvider.currentProfile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No planned locations found')),
+      );
+      return;
+    }
+
+    final plannedLocationMarkers =
+        LocationCoordinatesService.getPlannedLocationMarkers(
+          touristProvider.currentProfile!.plannedLocations,
+        );
+
+    if (plannedLocationMarkers.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No planned locations with coordinates found'),
+        ),
+      );
+      return;
+    }
+
+    // Get all coordinates
+    final coordinates = plannedLocationMarkers
+        .map((m) => m.coordinates)
+        .toList();
+
+    // Calculate center and zoom
+    final center = LocationCoordinatesService.getCenterPoint(coordinates);
+    final zoom = LocationCoordinatesService.getAppropriateZoom(coordinates);
+
+    // Move map to show all planned locations
+    if (_mapController != null) {
+      _mapController!.move(center, zoom);
+    }
+
+    // Show info about planned locations
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Showing ${plannedLocationMarkers.length} planned locations',
+        ),
+        action: SnackBarAction(
+          label: 'List',
+          onPressed: _showPlannedLocationsList,
+        ),
+      ),
+    );
+  }
+
+  // Show list of all planned locations
+  void _showPlannedLocationsList() {
+    final touristProvider = Provider.of<TouristProvider>(
+      context,
+      listen: false,
+    );
+    if (touristProvider.currentProfile == null) return;
+
+    final plannedLocationMarkers =
+        LocationCoordinatesService.getPlannedLocationMarkers(
+          touristProvider.currentProfile!.plannedLocations,
+        );
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Planned Locations',
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            if (plannedLocationMarkers.isEmpty)
+              const Text('No locations with coordinates found')
+            else
+              ...plannedLocationMarkers
+                  .map(
+                    (marker) => ListTile(
+                      leading: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2196F3),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${marker.order}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      title: Text(marker.name),
+                      subtitle: Text(
+                        'Lat: ${marker.coordinates.latitude.toStringAsFixed(4)}, '
+                        'Lng: ${marker.coordinates.longitude.toStringAsFixed(4)}',
+                      ),
+                      trailing: const Icon(Icons.place),
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        _moveToLocation(marker.coordinates);
+                      },
+                    ),
+                  )
+                  .toList(),
+          ],
+        ),
       ),
     );
   }
