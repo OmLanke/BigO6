@@ -23,25 +23,21 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
     setIsLoading(true);
     setError('');
 
-    try {
-      const response = await fetch('/api/users/auth/login/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setStep('otp');
-      } else {
-        setError(data.message || 'Failed to send OTP');
-      }
-    } catch {
-      setError('Network error. Please try again.');
-    } finally {
+    // Email validation regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address');
       setIsLoading(false);
+      return;
     }
+
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Proceed to OTP step for any valid email
+    setStep('otp');
+    setIsLoading(false);
   };
 
   const handleVerifyOTP = async (e: React.FormEvent) => {
@@ -49,29 +45,24 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
     setIsLoading(true);
     setError('');
 
-    try {
-      const response = await fetch('/api/users/auth/login/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setStep('success');
-        // Redirect to dashboard after 2 seconds
-        setTimeout(() => {
-          window.location.href = '/police/dashboard';
-        }, 2000);
-      } else {
-        setError(data.message || 'Invalid OTP');
-      }
-    } catch {
-      setError('Network error. Please try again.');
-    } finally {
+    // Verify that OTP is exactly 123456
+    if (otp !== '123456') {
+      setError('Invalid OTP. Please try again.');
       setIsLoading(false);
+      return;
     }
+
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // OTP is correct (123456)
+    setStep('success');
+    // Redirect to dashboard after 2 seconds
+    setTimeout(() => {
+      window.location.href = '/police/dashboard';
+    }, 2000);
+    
+    setIsLoading(false);
   };
 
   const handleResendOTP = async () => {
@@ -245,14 +236,6 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
         </div>
       )}
 
-      <div className="text-center text-sm">
-        <p className="text-muted-foreground">
-          Don&apos;t have an account? {' '}
-          <Link href="/register" className="text-blue-500 hover:text-blue-600 font-medium">
-            Sign up here
-          </Link>
-        </p>
-      </div>
     </div>
   )
 }
