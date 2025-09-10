@@ -3,10 +3,14 @@ import 'package:provider/provider.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/location_provider.dart';
 import '../providers/tourist_provider.dart';
 import '../services/location_coordinates_service.dart';
 import '../utils/theme.dart';
+import '../widgets/sos_timer_dialog.dart';
+import '../widgets/location_feedback_dialog.dart';
+import '../screens/family_members_screen.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -234,37 +238,83 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           );
         },
       ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            heroTag: "planned_locations",
-            onPressed: _showAllPlannedLocations,
-            child: const Icon(Icons.map),
-            tooltip: 'Show Planned Locations',
-            backgroundColor: const Color(0xFF2196F3),
-          ),
-          const SizedBox(height: 16),
-          FloatingActionButton(
-            heroTag: "clear_pin",
-            onPressed: () {
-              setState(() {
-                _tappedLocation = null;
-              });
-            },
-            child: const Icon(Icons.clear),
-            tooltip: 'Clear Pin',
-            backgroundColor: AppColors.cautionTone,
-          ),
-          const SizedBox(height: 16),
-          FloatingActionButton(
-            heroTag: "location",
-            onPressed: _moveToCurrentLocation,
-            child: const Icon(Icons.my_location),
-            tooltip: 'My Location',
-            backgroundColor: AppColors.primaryAccent,
-          ),
-        ],
+      floatingActionButton: Consumer<TouristProvider>(
+        builder: (context, touristProvider, child) {
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              // Family Members button
+              FloatingActionButton(
+                heroTag: "family_members",
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const FamilyMembersScreen(),
+                  ),
+                ),
+                child: const Icon(Icons.family_restroom),
+                tooltip: 'Family Members',
+                backgroundColor: AppColors.primary,
+              ),
+              const SizedBox(height: 16),
+              // Feedback button
+              if (_tappedLocation != null)
+                FloatingActionButton(
+                  heroTag: "feedback",
+                  onPressed: () => _showFeedbackDialog(_tappedLocation!),
+                  child: const Icon(Icons.rate_review),
+                  tooltip: 'Give Feedback',
+                  backgroundColor: AppColors.cautionTone,
+                ),
+              if (_tappedLocation != null) const SizedBox(height: 16),
+              // SOS button with timer
+              FloatingActionButton(
+                heroTag: "sos",
+                onPressed: touristProvider.sosTimerActive ? null : _triggerSOS,
+                child: touristProvider.sosTimerActive
+                    ? const CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      )
+                    : const Icon(Icons.emergency),
+                tooltip: touristProvider.sosTimerActive
+                    ? 'SOS Timer Active'
+                    : 'Emergency SOS',
+                backgroundColor: touristProvider.sosTimerActive
+                    ? Colors.grey
+                    : AppColors.dangerTone,
+              ),
+              const SizedBox(height: 16),
+              FloatingActionButton(
+                heroTag: "planned_locations",
+                onPressed: _showAllPlannedLocations,
+                child: const Icon(Icons.map),
+                tooltip: 'Show Planned Locations',
+                backgroundColor: const Color(0xFF2196F3),
+              ),
+              const SizedBox(height: 16),
+              FloatingActionButton(
+                heroTag: "clear_pin",
+                onPressed: () {
+                  setState(() {
+                    _tappedLocation = null;
+                  });
+                },
+                child: const Icon(Icons.clear),
+                tooltip: 'Clear Pin',
+                backgroundColor: AppColors.cautionTone,
+              ),
+              const SizedBox(height: 16),
+              FloatingActionButton(
+                heroTag: "location",
+                onPressed: _moveToCurrentLocation,
+                child: const Icon(Icons.my_location),
+                tooltip: 'My Location',
+                backgroundColor: AppColors.primaryAccent,
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -920,5 +970,120 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         ),
       ),
     );
+  }
+
+  // SOS functionality with timer
+  void _triggerSOS() {
+    final locationProvider = Provider.of<LocationProvider>(
+      context,
+      listen: false,
+    );
+    final touristProvider = Provider.of<TouristProvider>(
+      context,
+      listen: false,
+    );
+
+    if (locationProvider.currentLocation == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Location not available for SOS')),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => SOSTimerDialog(
+        onTimeout: () {
+          touristProvider.triggerSOS(
+            latitude: locationProvider.currentLocation!.latitude,
+            longitude: locationProvider.currentLocation!.longitude,
+            customMessage: 'Emergency SOS triggered from mobile app',
+          );
+
+          // Also call emergency contact
+          _callEmergencyContact(touristProvider);
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'SOS sent to authorities and emergency contact called!',
+              ),
+              backgroundColor: AppColors.dangerTone,
+            ),
+          );
+        },
+        onDismiss: () {
+          touristProvider.dismissSOS();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('SOS dismissed'),
+              backgroundColor: AppColors.safeTone,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // Show feedback dialog for a location
+  void _showFeedbackDialog(LatLng location) {
+    showDialog(
+      context: context,
+      builder: (context) => LocationFeedbackDialog(
+        latitude: location.latitude,
+        longitude: location.longitude,
+        locationName: 'Pinned Location',
+      ),
+    );
+  }
+
+  // Call emergency contact helper method
+  Future<void> _callEmergencyContact(TouristProvider touristProvider) async {
+    final profile = touristProvider.currentProfile;
+    if (profile == null || profile.emergencyContactNumber.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No emergency contact number available'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final phoneNumber = profile.emergencyContactNumber;
+    final cleanedNumber = phoneNumber.replaceAll(
+      RegExp(r'[^\d+]'),
+      '',
+    ); // Remove non-digit characters except +
+
+    try {
+      final Uri phoneUri = Uri(scheme: 'tel', path: cleanedNumber);
+      if (await canLaunchUrl(phoneUri)) {
+        await launchUrl(phoneUri);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Calling ${profile.emergencyContact} at $phoneNumber',
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to make phone call on this device'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error making phone call: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

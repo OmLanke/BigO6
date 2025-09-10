@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/tourist_provider.dart';
 import '../providers/location_provider.dart';
+import '../screens/family_members_screen.dart';
+import '../screens/feedback_list_screen.dart';
+import '../widgets/sos_timer_dialog.dart';
 
 class QuickActionsGrid extends StatelessWidget {
   const QuickActionsGrid({super.key});
@@ -26,7 +30,8 @@ class QuickActionsGrid extends StatelessWidget {
           crossAxisCount: 2,
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
-          childAspectRatio: 1.2,
+          childAspectRatio:
+              1.05, // Further reduced from 1.1 to 1.05 to give more height
           children: [
             _SOSButton(),
             _QuickActionCard(
@@ -37,18 +42,28 @@ class QuickActionsGrid extends StatelessWidget {
               onTap: () => context.go('/map'),
             ),
             _QuickActionCard(
-              title: 'Emergency Contacts',
-              subtitle: 'Quick dial contacts',
-              icon: Icons.emergency_outlined,
-              color: Colors.orange,
-              onTap: () => context.go('/emergency-contacts'),
+              title: 'Family Members',
+              subtitle: 'Manage family travel',
+              icon: Icons.family_restroom,
+              color: Colors.green,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const FamilyMembersScreen(),
+                ),
+              ),
             ),
             _QuickActionCard(
-              title: 'Share Location',
-              subtitle: 'With family & friends',
-              icon: Icons.share_location_outlined,
-              color: Colors.green,
-              onTap: () => context.go('/family-tracking'),
+              title: 'My Feedbacks',
+              subtitle: 'Location safety reviews',
+              icon: Icons.rate_review,
+              color: Colors.purple,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const FeedbackListScreen(),
+                ),
+              ),
             ),
           ],
         ),
@@ -63,6 +78,7 @@ class _SOSButton extends StatelessWidget {
     return Consumer2<TouristProvider, LocationProvider>(
       builder: (context, touristProvider, locationProvider, child) {
         final sosActive = touristProvider.sosActive;
+        final sosTimerActive = touristProvider.sosTimerActive;
 
         return GestureDetector(
           onTap: () =>
@@ -74,12 +90,20 @@ class _SOSButton extends StatelessWidget {
                 end: Alignment.bottomRight,
                 colors: sosActive
                     ? [Colors.red.shade700, Colors.red.shade900]
+                    : sosTimerActive
+                    ? [Colors.orange.shade600, Colors.orange.shade800]
                     : [Colors.red, Colors.red.shade700],
               ),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.red.withOpacity(0.3),
+                  color:
+                      (sosActive
+                              ? Colors.red
+                              : sosTimerActive
+                              ? Colors.orange
+                              : Colors.red)
+                          .withOpacity(0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -87,13 +111,16 @@ class _SOSButton extends StatelessWidget {
             ),
             child: Stack(
               children: [
-                // Pulse animation when SOS is active
-                if (sosActive) ...[
+                // Pulse animation when SOS is active or timer is running
+                if (sosActive || sosTimerActive) ...[
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.red, width: 2),
+                        border: Border.all(
+                          color: sosActive ? Colors.red : Colors.orange,
+                          width: 2,
+                        ),
                       ),
                     ),
                   ),
@@ -106,13 +133,21 @@ class _SOSButton extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        sosActive ? Icons.emergency : Icons.emergency_outlined,
+                        sosActive
+                            ? Icons.emergency
+                            : sosTimerActive
+                            ? Icons.timer
+                            : Icons.emergency_outlined,
                         color: Colors.white,
                         size: 32,
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        sosActive ? 'SOS ACTIVE' : 'Emergency SOS',
+                        sosActive
+                            ? 'SOS ACTIVE'
+                            : sosTimerActive
+                            ? 'SOS TIMER'
+                            : 'Emergency SOS',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -122,7 +157,11 @@ class _SOSButton extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        sosActive ? 'Help is on the way' : 'Tap for emergency',
+                        sosActive
+                            ? 'Help is on the way'
+                            : sosTimerActive
+                            ? 'Timer running...'
+                            : 'Tap for emergency',
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.9),
                           fontSize: 12,
@@ -151,6 +190,33 @@ class _SOSButton extends StatelessWidget {
       return;
     }
 
+    if (touristProvider.sosTimerActive) {
+      // SOS timer already active, show dismiss option
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('SOS Timer Active'),
+          content: const Text(
+            'SOS timer is already running. Do you want to dismiss it?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                touristProvider.dismissSOS();
+                Navigator.pop(context);
+              },
+              child: const Text('Dismiss SOS'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     // Trigger haptic feedback
     try {
       HapticFeedback.heavyImpact();
@@ -158,70 +224,53 @@ class _SOSButton extends StatelessWidget {
       // Haptic feedback not supported on this device
     }
 
-    // Show confirmation dialog
-    final bool? confirmed = await showDialog<bool>(
+    final location = locationProvider.currentLocation;
+    if (location == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Location not available for SOS')),
+      );
+      return;
+    }
+
+    // Show SOS timer dialog
+    showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        title: Row(
-          children: [
-            Icon(Icons.emergency, color: Colors.red, size: 28),
-            const SizedBox(width: 12),
-            const Text('Emergency SOS'),
-          ],
-        ),
-        content: const Text(
-          'This will immediately alert emergency services, police, and your emergency contacts with your current location.\n\nAre you sure you want to proceed?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Send SOS'),
-          ),
-        ],
+      builder: (context) => SOSTimerDialog(
+        onTimeout: () async {
+          await touristProvider.triggerSOS(
+            latitude: location.latitude,
+            longitude: location.longitude,
+            customMessage: 'Emergency SOS triggered from home screen',
+          );
+
+          // Also call emergency contact
+          await _callEmergencyContact(context, touristProvider);
+
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'SOS sent to authorities and emergency contact called!',
+                ),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        onDismiss: () {
+          touristProvider.dismissSOS();
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('SOS dismissed'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        },
       ),
     );
-
-    if (confirmed == true) {
-      final location = locationProvider.currentLocation;
-      if (location != null) {
-        await touristProvider.triggerSOS(
-          latitude: location.latitude,
-          longitude: location.longitude,
-        );
-
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Emergency SOS sent successfully!'),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      } else {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Location not available. Please enable location services.',
-              ),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      }
-    }
   }
 
   void _showResolveSOSDialog(
@@ -269,6 +318,65 @@ class _SOSButton extends StatelessWidget {
       ),
     );
   }
+
+  Future<void> _callEmergencyContact(
+    BuildContext context,
+    TouristProvider touristProvider,
+  ) async {
+    final profile = touristProvider.currentProfile;
+    if (profile == null || profile.emergencyContactNumber.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No emergency contact number available'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
+    final phoneNumber = profile.emergencyContactNumber;
+    final cleanedNumber = phoneNumber.replaceAll(
+      RegExp(r'[^\d+]'),
+      '',
+    ); // Remove non-digit characters except +
+
+    try {
+      final Uri phoneUri = Uri(scheme: 'tel', path: cleanedNumber);
+      if (await canLaunchUrl(phoneUri)) {
+        await launchUrl(phoneUri);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Calling ${profile.emergencyContact} at $phoneNumber',
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Unable to make phone call on this device'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error making phone call: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 }
 
 class _QuickActionCard extends StatelessWidget {
@@ -295,28 +403,34 @@ class _QuickActionCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16), // Reduced from 20 to 16
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: 44, // Slightly reduced icon container size
+                height: 44,
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: color, size: 24),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 22,
+                ), // Slightly reduced icon size
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10), // Reduced spacing
               Text(
                 title,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ), // Changed from titleMedium to titleSmall
                 textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2), // Reduced from 4 to 2
               Text(
                 subtitle,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -325,6 +439,8 @@ class _QuickActionCard extends StatelessWidget {
                   ).colorScheme.onSurface.withOpacity(0.7),
                 ),
                 textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
