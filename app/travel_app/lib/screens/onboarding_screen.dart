@@ -134,7 +134,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             curve: Curves.easeInOut,
                           );
                         } else {
-                          context.go('/registration');
+                          context.go('/otp-login');
                         }
                       },
                       style: ElevatedButton.styleFrom(

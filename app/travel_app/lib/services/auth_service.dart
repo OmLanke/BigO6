@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'http_service.dart';
 import '../models/tourist_profile.dart';
@@ -8,36 +7,34 @@ class AuthService {
   factory AuthService() => _instance;
   AuthService._internal();
 
-  /// Send OTP to the specified email for verification
-  Future<bool> sendEmailOTP(String email) async {
+  /// Send OTP to the specified email
+  Future<Map<String, dynamic>?> sendEmailOTP(String email, String type) async {
     try {
       final response = await HttpService.post('/users/auth/send-otp', {
         'email': email,
+        'type': type,
       });
 
-      return response['success'] == true;
+      return response;
     } catch (e) {
       if (kDebugMode) {
         print('Error sending email OTP: $e');
       }
-      return false;
+      return null;
     }
   }
 
   /// Verify the OTP received via email
-  /// Returns the user ID if verification is successful
-  Future<Map<String, dynamic>?> verifyEmailOTP(String email, String otp) async {
+  /// Returns the full response from the backend
+  Future<Map<String, dynamic>?> verifyEmailOTP(String email, String otp, String type) async {
     try {
       final response = await HttpService.post('/users/auth/verify-otp', {
         'email': email,
         'otp': otp,
+        'type': type,
       });
 
-      if (response['success'] == true && response['data'] != null) {
-        return response['data'];
-      }
-
-      return null;
+      return response;
     } catch (e) {
       if (kDebugMode) {
         print('Error verifying email OTP: $e');
@@ -55,6 +52,7 @@ class AuthService {
     required String passportNumber,
     required String emergencyContact,
     required String emergencyContactNumber,
+    String? emergencyContactRelationship,
     DateTime? dateOfBirth,
     String? address,
     String? gender,
@@ -68,6 +66,7 @@ class AuthService {
         'passportNumber': passportNumber,
         'emergencyContactName': emergencyContact,
         'emergencyContactPhone': emergencyContactNumber,
+        if (emergencyContactRelationship != null) 'emergencyContactRelationship': emergencyContactRelationship,
         if (dateOfBirth != null) 'dateOfBirth': dateOfBirth.toIso8601String(),
         if (address != null) 'address': address,
         if (gender != null) 'gender': gender,

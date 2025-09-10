@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
 import '../widgets/custom_button.dart';
 import '../utils/validation_utils.dart';
-import 'registration_screen.dart';
 
 class OtpLoginScreen extends StatefulWidget {
   const OtpLoginScreen({super.key});
@@ -36,13 +36,14 @@ class _OtpLoginScreenState extends State<OtpLoginScreen> {
       });
 
       try {
-        final success = await _authService.sendEmailOTP(_emailController.text);
+        final result = await _authService.sendEmailOTP(_emailController.text, 'login');
 
         setState(() {
           _isLoading = false;
-          _otpSent = success;
-          if (!success) {
-            _errorMessage = 'Failed to send OTP. Please try again.';
+          if (result?['success'] == true) {
+            _otpSent = true;
+          } else {
+            _errorMessage = result?['message'] ?? 'Failed to send OTP. Please try again.';
           }
         });
       } catch (e) {
@@ -62,31 +63,34 @@ class _OtpLoginScreenState extends State<OtpLoginScreen> {
       });
 
       try {
-        final userData = await _authService.verifyEmailOTP(
+        final result = await _authService.verifyEmailOTP(
           _emailController.text,
           _otpController.text,
+          'login',
         );
 
         setState(() {
           _isLoading = false;
         });
 
-        if (userData != null) {
-          // Successfully verified OTP
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => RegistrationScreen(
-                  userId: userData['userId'],
-                  email: userData['email'],
-                ),
-              ),
-            );
+        if (result?['success'] == true) {
+          final data = result?['data'];
+          
+          // Check if user needs to complete registration
+          if (data?['requiresRegistration'] == true) {
+            // Redirect to registration screen with userId
+            if (mounted) {
+              context.go('/registration?userId=${data['userId']}&email=${data['email']}');
+            }
+          } else if (data?['user'] != null) {
+            // User already registered, redirect to home
+            if (mounted) {
+              context.go('/home');
+            }
           }
         } else {
           setState(() {
-            _errorMessage = 'Invalid OTP. Please try again.';
+            _errorMessage = result?['message'] ?? 'Invalid OTP. Please try again.';
           });
         }
       } catch (e) {
@@ -102,8 +106,20 @@ class _OtpLoginScreenState extends State<OtpLoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Email Login'),
+        title: const Text('Email OTP Login'),
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // If we can go back in the router stack, do that
+            // Otherwise go to landing as fallback
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              context.go('/landing');
+            }
+          },
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
@@ -125,12 +141,27 @@ class _OtpLoginScreenState extends State<OtpLoginScreen> {
               
               // Title
               Text(
-                !_otpSent ? 'Login with Email' : 'Enter OTP',
+                !_otpSent ? 'Login with Email OTP' : 'Enter Verification Code',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineMedium,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               
-              const SizedBox(height: 20),
+              const SizedBox(height: 8),
+
+              // Subtitle
+              Text(
+                !_otpSent 
+                    ? 'We\'ll send a verification code to your email'
+                    : 'Please enter the 6-digit code sent to\n${_emailController.text}',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              
+              const SizedBox(height: 30),
               
               // Error message
               if (_errorMessage != null)
@@ -171,18 +202,26 @@ class _OtpLoginScreenState extends State<OtpLoginScreen> {
                     TextFormField(
                       controller: _otpController,
                       keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 8,
+                      ),
+                      maxLength: 6,
                       decoration: const InputDecoration(
-                        labelText: 'OTP',
-                        hintText: 'Enter the OTP sent to your email',
-                        prefixIcon: Icon(Icons.lock),
+                        labelText: 'Verification Code',
+                        hintText: '000000',
+                        prefixIcon: Icon(Icons.verified_user),
                         border: OutlineInputBorder(),
+                        counterText: '', // Hide character counter
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter the OTP';
+                          return 'Please enter the verification code';
                         }
-                        if (value.length < 4) {
-                          return 'Please enter a valid OTP';
+                        if (value.length < 6) {
+                          return 'Please enter the complete 6-digit code';
                         }
                         return null;
                       },
@@ -217,15 +256,32 @@ class _OtpLoginScreenState extends State<OtpLoginScreen> {
               
               // Alternative login options
               if (!_otpSent)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                Column(
                   children: [
-                    const Text('Already have an account?'),
-                    TextButton(
-                      onPressed: () {
-                        // Navigate to traditional login screen if available
-                      },
-                      child: const Text('Login'),
+                    Row(
+                      children: [
+                        const Expanded(child: Divider()),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'or',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        const Expanded(child: Divider()),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    TextButton.icon(
+                      onPressed: () => context.go('/auth'),
+                      icon: const Icon(Icons.login),
+                      label: const Text('Use Other Login Options'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Theme.of(context).primaryColor,
+                      ),
                     ),
                   ],
                 ),

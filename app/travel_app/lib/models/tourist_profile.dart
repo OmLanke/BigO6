@@ -5,6 +5,7 @@ class TouristProfile {
   final String nationality;
   final String emergencyContact;
   final String emergencyContactNumber;
+  final String? emergencyContactRelationship;
   final DateTime tripStartDate;
   final DateTime tripEndDate;
   final List<String> plannedLocations;
@@ -18,6 +19,7 @@ class TouristProfile {
     required this.nationality,
     required this.emergencyContact,
     required this.emergencyContactNumber,
+    this.emergencyContactRelationship,
     required this.tripStartDate,
     required this.tripEndDate,
     required this.plannedLocations,
@@ -33,6 +35,7 @@ class TouristProfile {
       'nationality': nationality,
       'emergencyContact': emergencyContact,
       'emergencyContactNumber': emergencyContactNumber,
+      'emergencyContactRelationship': emergencyContactRelationship,
       'tripStartDate': tripStartDate.toIso8601String(),
       'tripEndDate': tripEndDate.toIso8601String(),
       'plannedLocations': plannedLocations,
@@ -49,6 +52,7 @@ class TouristProfile {
       nationality: json['nationality'],
       emergencyContact: json['emergencyContact'],
       emergencyContactNumber: json['emergencyContactNumber'],
+      emergencyContactRelationship: json['emergencyContactRelationship'],
       tripStartDate: DateTime.parse(json['tripStartDate']),
       tripEndDate: DateTime.parse(json['tripEndDate']),
       plannedLocations: List<String>.from(json['plannedLocations']),
@@ -67,6 +71,7 @@ class TouristProfile {
       emergencyContact: json['emergencyContactName'] ?? 'Emergency Contact',
       emergencyContactNumber:
           json['emergencyContactPhone'] ?? '+91-98765-43210',
+      emergencyContactRelationship: json['emergencyContactRelationship'],
       tripStartDate: DateTime.now().subtract(const Duration(days: 1)),
       tripEndDate: DateTime.now().add(const Duration(days: 6)),
       plannedLocations: const [
@@ -89,6 +94,7 @@ class TouristProfile {
     String? nationality,
     String? emergencyContact,
     String? emergencyContactNumber,
+    String? emergencyContactRelationship,
     DateTime? tripStartDate,
     DateTime? tripEndDate,
     List<String>? plannedLocations,
@@ -103,6 +109,8 @@ class TouristProfile {
       emergencyContact: emergencyContact ?? this.emergencyContact,
       emergencyContactNumber:
           emergencyContactNumber ?? this.emergencyContactNumber,
+      emergencyContactRelationship:
+          emergencyContactRelationship ?? this.emergencyContactRelationship,
       tripStartDate: tripStartDate ?? this.tripStartDate,
       tripEndDate: tripEndDate ?? this.tripEndDate,
       plannedLocations: plannedLocations ?? this.plannedLocations,

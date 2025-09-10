@@ -158,7 +158,7 @@ class LandingScreen extends StatelessWidget {
                 // Action Buttons - Professional Style
                 Column(
                   children: [
-                    // Primary Get Started Button
+                    // Primary Email OTP Login Button
                     Container(
                       width: double.infinity,
                       height: 60,
@@ -179,7 +179,7 @@ class LandingScreen extends StatelessWidget {
                         ],
                       ),
                       child: ElevatedButton(
-                        onPressed: () => context.go('/onboarding'),
+                        onPressed: () => context.go('/otp-login'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,
                           shadowColor: Colors.transparent,
@@ -187,21 +187,83 @@ class LandingScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
-                        child: const Text(
-                          'Get Started',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: 0.5,
-                          ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.email_outlined,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Login with Email OTP',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ).animate()
                         .fadeIn(duration: 600.ms, delay: 800.ms)
                         .slideY(begin: 0.5, end: 0),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
+                    
+                    // Alternative Login Button  
+                    Container(
+                      width: double.infinity,
+                      height: 56,
+                      child: OutlinedButton(
+                        onPressed: () => context.go('/auth'),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: const Color(0xFF3B82F6),
+                            width: 2,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: const Text(
+                          'Other Login Options',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF3B82F6),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ).animate()
+                        .fadeIn(duration: 600.ms, delay: 900.ms)
+                        .slideY(begin: 0.5, end: 0),
+
+                    const SizedBox(height: 12),
+                    
+                    // Learn More Button
+                    TextButton.icon(
+                      onPressed: () => context.go('/onboarding'),
+                      icon: const Icon(
+                        Icons.info_outline,
+                        size: 18,
+                        color: Color(0xFF64748B),
+                      ),
+                      label: const Text(
+                        'Learn More About TourRaksha',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                    ).animate().fadeIn(duration: 600.ms, delay: 950.ms),
+
+                    const SizedBox(height: 16),
                     
                     // Continue as Guest link
                     TextButton(

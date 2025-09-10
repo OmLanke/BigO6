@@ -26,6 +26,7 @@ class TouristProvider extends ChangeNotifier {
     required String nationality,
     required String emergencyContact,
     required String emergencyContactNumber,
+    String? emergencyContactRelationship,
     required DateTime tripStartDate,
     required DateTime tripEndDate,
     required List<String> plannedLocations,
@@ -42,6 +43,7 @@ class TouristProvider extends ChangeNotifier {
         nationality: nationality,
         emergencyContact: emergencyContact,
         emergencyContactNumber: emergencyContactNumber,
+        emergencyContactRelationship: emergencyContactRelationship,
         tripStartDate: tripStartDate,
         tripEndDate: tripEndDate,
         plannedLocations: plannedLocations,
@@ -189,6 +191,7 @@ class TouristProvider extends ChangeNotifier {
       nationality: 'India',
       emergencyContact: 'Emergency Contact',
       emergencyContactNumber: '+91-98765-43210',
+      emergencyContactRelationship: 'Parent',
       tripStartDate: DateTime.now().subtract(const Duration(days: 1)),
       tripEndDate: DateTime.now().add(const Duration(days: 6)),
       plannedLocations: [

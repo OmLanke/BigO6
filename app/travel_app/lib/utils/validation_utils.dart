@@ -14,6 +14,13 @@ class ValidationUtils {
     return null;
   }
 
+  /// Check if an email address is valid (returns boolean)
+  static bool isValidEmail(String value) {
+    if (value.isEmpty) return false;
+    final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+    return emailRegex.hasMatch(value);
+  }
+
   /// Validates a name
   static String? validateName(String? value) {
     if (value == null || value.isEmpty) {

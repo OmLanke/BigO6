@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/tourist_provider.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
 import '../services/auth_service.dart';
-import '../utils/validation_utils.dart';
 
 class RegistrationScreen extends StatefulWidget {
   final String? userId;  // Provided after OTP verification
@@ -35,6 +33,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   
   String? _gender;
   String? _bloodGroup;
+  String? _emergencyContactRelationship;
   DateTime? _dateOfBirth;
 
   DateTime _tripStartDate = DateTime.now();
@@ -45,7 +44,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   
   final _authService = AuthService();
   bool _isLoading = false;
-  String? _errorMessage;
   
   @override
   void initState() {
@@ -129,6 +127,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       bool success = false;
       
       if (widget.userId != null) {
+        // Debug: Print userId
+        print('Registration: userId = ${widget.userId}');
+        
         // Complete registration after OTP verification
         final profile = await _authService.completeRegistration(
           userId: widget.userId!,
@@ -138,6 +139,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           passportNumber: _passportController.text.trim(),
           emergencyContact: _emergencyContactController.text.trim(),
           emergencyContactNumber: _emergencyPhoneController.text.trim(),
+          emergencyContactRelationship: _emergencyContactRelationship,
           dateOfBirth: _dateOfBirth,
           address: _addressController.text,
           gender: _gender,
@@ -153,6 +155,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               nationality: profile.nationality,
               emergencyContact: profile.emergencyContact,
               emergencyContactNumber: profile.emergencyContactNumber,
+              emergencyContactRelationship: profile.emergencyContactRelationship,
               tripStartDate: DateTime.now(), // You might want to get this from form
               tripEndDate: DateTime.now().add(const Duration(days: 30)), // You might want to get this from form
               plannedLocations: [], // You might want to get this from form
@@ -172,6 +175,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             nationality: _nationalityController.text.trim(),
             emergencyContact: _emergencyContactController.text.trim(),
             emergencyContactNumber: _emergencyPhoneController.text.trim(),
+            emergencyContactRelationship: _emergencyContactRelationship,
             tripStartDate: _tripStartDate,
             tripEndDate: _tripEndDate,
             plannedLocations: _plannedLocations,
@@ -219,21 +223,30 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tourist Registration'),
+        title: const Text('Complete Your Profile'),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/onboarding'),
+          onPressed: () {
+            // If coming from OTP flow, go back to OTP login
+            // Otherwise go to onboarding
+            if (widget.userId != null) {
+              context.go('/otp-login');
+            } else {
+              context.go('/onboarding');
+            }
+          },
         ),
         actions: [
-          TextButton(
-            onPressed: () {
-              // Load demo data
-              context.read<TouristProvider>().loadMockData();
-              context.go('/home');
-            },
-            child: const Text('Demo'),
-          ),
+          if (widget.userId == null) // Only show demo for non-OTP flow
+            TextButton(
+              onPressed: () {
+                // Load demo data
+                context.read<TouristProvider>().loadMockData();
+                context.go('/home');
+              },
+              child: const Text('Demo'),
+            ),
         ],
       ),
       body: SingleChildScrollView(
@@ -245,12 +258,48 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             children: [
               // Header
               Text(
-                'Create Digital Tourist ID',
+                widget.userId != null 
+                    ? 'Complete Your Tourist Profile'
+                    : 'Create Digital Tourist ID',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 8),
+
+              // Informational text for OTP flow
+              if (widget.userId != null)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Colors.blue.shade200,
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: Colors.blue.shade600,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Your email has been verified! Please complete your profile to access all TourRaksha features.',
+                          style: TextStyle(
+                            color: Colors.blue.shade700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               Text(
                 'Your secure, blockchain-based travel identity',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -329,6 +378,53 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Please enter emergency contact phone';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Emergency Contact Relationship Dropdown
+              DropdownButtonFormField<String>(
+                value: _emergencyContactRelationship,
+                decoration: InputDecoration(
+                  labelText: 'Relationship',
+                  prefixIcon: const Icon(Icons.family_restroom_outlined),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    ),
+                  ),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'Parent', child: Text('Parent')),
+                  DropdownMenuItem(value: 'Spouse', child: Text('Spouse')),
+                  DropdownMenuItem(value: 'Sibling', child: Text('Sibling')),
+                  DropdownMenuItem(value: 'Child', child: Text('Child')),
+                  DropdownMenuItem(value: 'Relative', child: Text('Relative')),
+                  DropdownMenuItem(value: 'Friend', child: Text('Friend')),
+                  DropdownMenuItem(value: 'Guardian', child: Text('Guardian')),
+                  DropdownMenuItem(value: 'Other', child: Text('Other')),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    _emergencyContactRelationship = value;
+                  });
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please select relationship';
                   }
                   return null;
                 },
