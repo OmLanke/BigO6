@@ -29,12 +29,12 @@ interface MapProps {
 
 // Initial tourist positions (will be updated with safety data points)
 const tourists: Tourist[] = [
-  { id: 'tourist-001', name: 'Craig', location: [72.8677, 19.0760], lastSeen: '2 minutes ago' },
-  { id: 'tourist-002', name: 'Saish', location: [72.8877, 19.0860], lastSeen: '5 minutes ago' },
-  { id: 'tourist-003', name: 'Om', location: [72.8977, 19.0660], lastSeen: '1 minute ago' },
-  { id: 'tourist-004', name: 'Palak', location: [72.8577, 19.0960], lastSeen: '3 minutes ago' },
-  { id: 'tourist-005', name: 'Gargi', location: [72.8777, 19.0560], lastSeen: '7 minutes ago' },
-  { id: 'tourist-006', name: 'Pradyum', location: [72.8477, 19.0860], lastSeen: 'just now' },
+  { id: 'tourist-001', name: 'Craig', location: [91.7162, 26.1345], lastSeen: '2 minutes ago' },
+  { id: 'tourist-002', name: 'Saish', location: [91.7462, 26.1545], lastSeen: '5 minutes ago' },
+  { id: 'tourist-003', name: 'Om', location: [91.7562, 26.1245], lastSeen: '1 minute ago' },
+  { id: 'tourist-004', name: 'Palak', location: [91.7262, 26.1645], lastSeen: '3 minutes ago' },
+  { id: 'tourist-005', name: 'Gargi', location: [91.7662, 26.1445], lastSeen: '7 minutes ago' },
+  { id: 'tourist-006', name: 'Pradyum', location: [91.7362, 26.1145], lastSeen: 'just now' },
 ];
 
 // Function to update tourist positions with a very small random movement
@@ -49,7 +49,7 @@ const updateTouristPositions = (tourists: Tourist[]): Tourist[] => {
   }));
 };
 
-export default function Map({ center = [72.8777, 19.0760] }: MapProps) {
+export default function Map({ center = [91.7362, 26.1445] }: MapProps) {
   const mapElement = useRef<HTMLDivElement>(null);
   const map = useRef<tt.Map | null>(null);
   const safetyData = useRef<SafetyData[]>([]);
@@ -235,16 +235,36 @@ export default function Map({ center = [72.8777, 19.0760] }: MapProps) {
     const addTouristMarkers = (safetyData: SafetyData[]) => {
       if (!map.current) return;
 
-      // Position tourists near safety data points with lower scores (higher risk areas)
-      const sortedSafetyPoints = [...safetyData]
-        .sort((a, b) => a.safety_score - b.safety_score)
-        .slice(0, tourists.length);
+      // Filter safety data points specifically for Guwahati region
+      const guwahatiPoints = safetyData.filter(point => {
+        // More precise Guwahati boundaries based on heatmap data
+        return point.longitude >= 91.71 && point.longitude <= 91.78 &&
+               point.latitude >= 26.11 && point.latitude <= 26.18;
+      });
+
+      // Group points by risk level
+      const riskLevels = guwahatiPoints.reduce((acc, point) => {
+        if (point.safety_score <= 0.3) acc.high.push(point);
+        else if (point.safety_score <= 0.7) acc.medium.push(point);
+        else acc.low.push(point);
+        return acc;
+      }, { high: [], medium: [], low: [] } as { high: SafetyData[], medium: SafetyData[], low: SafetyData[] });
+
+      // Select diverse points for tourists
+      const selectedPoints = [
+        riskLevels.high[Math.floor(Math.random() * riskLevels.high.length)], // Craig in high risk
+        riskLevels.high[Math.floor(Math.random() * riskLevels.high.length)], // Saish in high risk
+        riskLevels.medium[Math.floor(Math.random() * riskLevels.medium.length)], // Om in medium risk
+        riskLevels.medium[Math.floor(Math.random() * riskLevels.medium.length)], // Palak in medium risk
+        riskLevels.low[Math.floor(Math.random() * riskLevels.low.length)], // Gargi in low risk
+        riskLevels.low[Math.floor(Math.random() * riskLevels.low.length)], // Pradyum in low risk
+      ].map(point => point || guwahatiPoints[0]); // Fallback to first point if any category is empty
 
       const updatedTourists = tourists.map((tourist, index) => ({
         ...tourist,
         location: [
-          sortedSafetyPoints[index].longitude,
-          sortedSafetyPoints[index].latitude
+          selectedPoints[index].longitude,
+          selectedPoints[index].latitude
         ] as [number, number]
       }));
 

@@ -19,7 +19,7 @@ export default function Page({
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <h1 className="text-2xl font-semibold tracking-tight">Tourist {touristId}</h1>
-                    <p className="text-sm text-muted-foreground">Profile & latest telemetry</p>
+                    <p className="text-sm text-muted-foreground">Tourist Profile</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <Badge className="rounded-3xl bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200">
@@ -33,7 +33,7 @@ export default function Page({
                         </Link>
                     </div>
                     <div className="hidden sm:flex gap-2">
-                        <Link href="/police/tourist-details/SOS-001/fir">
+                        <Link href="/police/live-alerts">
                             <Button size="sm" className="bg-zinc-400">
                                 Decline
                             </Button>
@@ -67,7 +67,7 @@ export default function Page({
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <Field label="Timestamp" value="2025-09-09 15:42 IST" />
-                        <Field label="Area" value="Mumbai, India" />
+                        <Field label="Area" value="Guwahati, India" />
                     </div>
 
                     <div className="rounded-lg border overflow-x-auto">
@@ -75,23 +75,18 @@ export default function Page({
                             <TableHeader>
                                 <TableRow className="bg-zinc-50 sticky top-0 z-10">
                                     <TableHead className="text-left p-3">Time</TableHead>
-                                    <TableHead className="text-left p-3">Source</TableHead>
-                                    <TableHead className="text-left p-3">Signal</TableHead>
-                                    <TableHead className="text-left p-3">Notes</TableHead>
+                                    <TableHead className="text-left p-3">Location</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody className="[&>tr:nth-child(odd)]:bg-zinc-50/50">
                                 <TableRow className="hover:bg-zinc-100/70 transition-colors">
                                     <TableCell className="p-3">2025-09-09 15:42 IST</TableCell>
-                                    <TableCell className="p-3">GPS</TableCell>
-                                    <TableCell className="p-3">Strong</TableCell>
-                                    <TableCell className="p-3">—</TableCell>
+                                    <TableCell className="p-3">Restroom</TableCell>
                                 </TableRow>
                                 <TableRow className="hover:bg-zinc-100/70 transition-colors">
                                     <TableCell className="p-3">2025-09-09 15:38 IST</TableCell>
                                     <TableCell className="p-3">Cell Tower</TableCell>
-                                    <TableCell className="p-3">Medium</TableCell>
-                                    <TableCell className="p-3">Neighbouring cell</TableCell>
+
                                 </TableRow>
                             </TableBody>
                         </Table>

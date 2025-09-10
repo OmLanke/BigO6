@@ -3,6 +3,9 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import Image from "next/image";
+import TourRakshaLogo from "../../../../../../public/images/TourRakshaLogo.png";
+
 
 type FIR = {
   firNo?: string;
@@ -14,7 +17,7 @@ type FIR = {
   placeAddress?: string;     
 
   infoReceivedAt?: string;
-  infoType?: "Oral" | "Written";
+  infoType?: "E-FIR";
   gdEntry?: string;
 
   cName?: string;           
@@ -28,25 +31,23 @@ type FIR = {
 };
 
 const sample: FIR = {
-  firNo: "540",
+  firNo: "110",
   year: "2025",
-  policeStation: "Colaba PS",
-  district: "Mumbai City",
+  policeStation: "Guwahati Police Station",
+  district: "Kamrup Metropolitan district",
 
-  occFrom: "2025-09-09 15:20",
-  placeAddress: "Gate 3, West Plaza, Mumbai",
+  placeAddress: "Gate 3, West Plaza, Guwahati",
 
   infoReceivedAt: "2025-09-09 16:05",
-  infoType: "Oral",
+  infoType: "E-FIR",
   gdEntry: "GD 238/15:50",
 
-  cName: "Craig R",
+  cName: "Devesh P",
   cPhone: "+91 98XXXXXX10",
   cAddress: "—",
-  cIdDoc: "Passport P1234567",
 
 
-  ioNameRank: "SI A. Sharma (Buckle 1123)",
+  ioNameRank: "DS Sharma",
   preparedOn: "2025-09-09 18:30",
 };
 
@@ -65,12 +66,20 @@ export default function FIRLayoutPage() {
 
       <Card className="bg-white border shadow-sm rounded-xl print:shadow-none print:border-0">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-semibold text-center">
-            FIRST INFORMATION REPORT (FIR)
-          </CardTitle>
-          <p className="text-center text-xs text-muted-foreground">
-            (Section 154, Code of Criminal Procedure)
-          </p>
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative w-[120px] h-[120px] print:block">
+              <Image
+                src={TourRakshaLogo}
+                alt="TourRaksha Logo"
+                priority
+                className="object-contain"
+                fill
+              />
+            </div>
+            <CardTitle className="text-lg font-semibold text-center">
+              FIRST INFORMATION REPORT (FIR)
+            </CardTitle>
+          </div>
         </CardHeader>
 
         <CardContent className="space-y-5 text-sm">
@@ -81,21 +90,16 @@ export default function FIRLayoutPage() {
             <Row a="Complainant Name" av={data.cName} b="Phone" bv={data.cPhone} />
           </Section>
 
-          <Section title="Incident Intake (Light)">
+          <Section title="Incident Intake">
             <Row a="Information Received At" av={data.infoReceivedAt} b="Type of Information" bv={data.infoType || ""} />
             <RowFull a="GD Entry No./Time" av={data.gdEntry} />
           </Section>
 
-          <Section title="Complainant (Extras)">
-            <RowFull a="Address" av={data.cAddress} />
-            <RowFull a="ID/Passport" av={data.cIdDoc} />
-          </Section>
+
 
           <Section title="Officer & Signatures">
             <Row a="Investigating Officer (Name/Rank)" av={data.ioNameRank} b="Prepared On" bv={data.preparedOn} />
             <div className="grid grid-cols-2 gap-6 mt-2">
-              <Sig label="Complainant / Informant" />
-              <Sig label="Duty Officer / SHO" />
             </div>
           </Section>
         </CardContent>
@@ -104,8 +108,29 @@ export default function FIRLayoutPage() {
       <style jsx global>{`
         @media print {
           .no-print { display: none !important; }
-          @page { size: A4; margin: 12mm; }
-          html, body { background: white; }
+          @page { 
+            size: A4; 
+            margin: 12mm; 
+          }
+          html, body { 
+            background: white;
+            height: 100%;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          main, .main-content {
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+          /* Ensure the logo prints */
+          img {
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+          }
+          /* Remove any navigation or extra elements */
+          nav, header, footer {
+            display: none !important;
+          }
         }
       `}</style>
     </div>
