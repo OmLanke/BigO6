@@ -1,6 +1,6 @@
 class ApiConstants {
   // Backend URL - Change this to your deployed backend URL when ready
-  static const String baseUrl = 'http://localhost:8000';
+  static const String baseUrl = 'https://tour-raksha-api.vercel.app';
   static const String apiVersion = 'v1';
   static const String apiPrefix = '/api';
 
@@ -28,6 +28,6 @@ class ApiConstants {
   };
 
   // Developer info
-  static const String developerName = 'Pradyum Mistry';
+  static const String developerName = 'BigO6';
   static const String location = 'India';
 }
